@@ -6,8 +6,8 @@ export interface ReviewInput {
 }
 
 export async function ollamaReview(cfg: Config, input: ReviewInput): Promise<string> {
-  const baseURL = cfg.ollama?.baseURL || 'http://localhost:11434'
-  const model = cfg.ollama?.model || 'qwen2.5-coder'
+  const baseURL = cfg.providerOptions?.ollama?.baseURL || 'http://localhost:11434'
+  const model = cfg.providerOptions?.ollama?.model || 'qwen2.5-coder'
   const chatUrl = `${baseURL}/api/chat`
   const chatBody = {
     model,

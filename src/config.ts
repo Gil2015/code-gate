@@ -6,39 +6,41 @@ export type Provider = 'ollama' | 'deepseek'
 
 export interface Config {
   provider: Provider
-  review?: {
-    provider?: Provider
-    enabled?: boolean
-    mode?: 'aggregate' | 'per_file'
-  }
-  ollama?: {
-    baseURL?: string
-    model?: string
-  }
-  deepseek?: {
-    baseURL?: string
-    apiKeyEnv?: string
-    model?: string
+  providerOptions?: {
+    ollama?: {
+      baseURL?: string
+      model?: string
+    }
+    deepseek?: {
+      baseURL?: string
+      apiKeyEnv?: string
+      model?: string
+    }
+    openai?: {
+      baseURL?: string
+      apiKeyEnv?: string
+      model?: string
+    }
+    anthropic?: {
+      baseURL?: string
+      apiKeyEnv?: string
+      model?: string
+    }
+    azureOpenAI?: {
+      endpoint?: string
+      apiKeyEnv?: string
+      deployment?: string
+      apiVersion?: string
+    }
   }
   fileTypes?: string[]
-  scope?:
-    | 'staged'
-    | 'allChanged'
-    | {
-        include?: string[]
-        exclude?: string[]
-      }
   ui?: {
     openBrowser?: boolean
-    theme?: 'github'
     port: number
   }
   limits?: {
     maxDiffLines?: number
     maxFiles?: number
-  }
-  rules?: {
-    focus?: Array<'security' | 'performance' | 'style' | 'tests'>
   }
   prompt?: string
   output?: {
@@ -48,32 +50,25 @@ export interface Config {
 
 const defaultConfig: Config = {
   provider: 'deepseek',
-  review: {
-    enabled: true,
-    mode: 'per_file'
-  },
-  deepseek: {
-    baseURL: 'https://api.deepseek.com',
-    apiKeyEnv: 'DEEPSEEK_API_KEY',
-    model: 'deepseek-chat'
-  },
-  ollama: {
-    baseURL: 'http://localhost:11434',
-    model: 'qwen2.5-coder'
+  providerOptions: {
+    deepseek: {
+      baseURL: 'https://api.deepseek.com',
+      apiKeyEnv: 'DEEPSEEK_API_KEY',
+      model: 'deepseek-chat'
+    },
+    ollama: {
+      baseURL: 'http://localhost:11434',
+      model: 'qwen2.5-coder'
+    }
   },
   fileTypes: ['ts', 'tsx', 'js', 'jsx', 'json', 'md', 'py', 'go', 'rs'],
-  scope: 'staged',
   ui: {
     openBrowser: true,
-    theme: 'github',
     port: 5175
   },
   limits: {
     maxDiffLines: 10000,
     maxFiles: 100
-  },
-  rules: {
-    focus: ['security', 'performance', 'style', 'tests']
   },
   prompt:
     '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
@@ -119,12 +114,32 @@ export async function loadConfig(cwd = process.cwd()): Promise<Config> {
   const merged: Config = {
     ...defaultConfig,
     ...user,
-    review: { ...defaultConfig.review, ...(user.review || {}) },
-    deepseek: { ...defaultConfig.deepseek, ...(user.deepseek || {}) },
-    ollama: { ...defaultConfig.ollama, ...(user.ollama || {}) },
     ui: { ...defaultConfig.ui, ...(user.ui || {}) },
     limits: { ...defaultConfig.limits, ...(user.limits || {}) },
-    rules: { ...defaultConfig.rules, ...(user.rules || {}) },
+    providerOptions: {
+      ...(defaultConfig.providerOptions || {}),
+      ...(user.providerOptions || {}),
+      deepseek: {
+        ...(defaultConfig.providerOptions?.deepseek || {}),
+        ...(user.providerOptions?.deepseek || {})
+      },
+      ollama: {
+        ...(defaultConfig.providerOptions?.ollama || {}),
+        ...(user.providerOptions?.ollama || {})
+      },
+      openai: {
+        ...(defaultConfig.providerOptions?.openai || {}),
+        ...(user.providerOptions?.openai || {})
+      },
+      anthropic: {
+        ...(defaultConfig.providerOptions?.anthropic || {}),
+        ...(user.providerOptions?.anthropic || {})
+      },
+      azureOpenAI: {
+        ...(defaultConfig.providerOptions?.azureOpenAI || {}),
+        ...(user.providerOptions?.azureOpenAI || {})
+      }
+    },
     output: { ...defaultConfig.output, ...(user.output || {}) }
   }
   return merged

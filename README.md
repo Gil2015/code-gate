@@ -50,40 +50,34 @@ AI 助力的提交时代码 Review 工具，支持本地 Ollama 或 DeepSeek API
 - 示例（`.codegate.js`）：
 ```js
 // provider: 选择使用的 AI 审查引擎，可选值: 'ollama' | 'deepseek'
-// review: 审查相关设置
-//   - enabled: 是否启用审查
-//   - provider: 覆盖顶层 provider，支持按需切换，可选值: 'ollama' | 'deepseek'
-//   - mode: 审查展示模式，可选值: 'aggregate'（整合输出）| 'per_file'（按文件 Tab 展示）
-// ollama: 本地 Ollama 设置
-//   - baseURL: Ollama 服务地址，默认 'http://localhost:11434'
-//   - model: 模型名称，例如 'qwen3:8b'、'deepseek-r1:14b'
-// deepseek: DeepSeek 云端设置
-//   - baseURL: API 地址，默认 'https://api.deepseek.com'
-//   - apiKeyEnv: 存放密钥的环境变量名，默认 'DEEPSEEK_API_KEY'
-//   - model: 模型名称，默认 'deepseek-chat'
+// providerOptions: 各 Provider 的配置集合（选填）
+//   - deepseek: { baseURL, apiKeyEnv, model }
+//   - ollama: { baseURL, model }
+//   - openai: { baseURL, apiKeyEnv, model }
+//   - anthropic: { baseURL, apiKeyEnv, model }
+//   - azureOpenAI: { endpoint, apiKeyEnv, deployment, apiVersion }
 // fileTypes: 需要审查的文件类型扩展名列表
-// scope: 审查范围，可选值: 'staged' | 'allChanged' | { include?: string[], exclude?: string[] }
 // ui: 页面与交互设置
 //   - openBrowser: 是否自动打开浏览器
-//   - theme: 主题，目前仅 'github'
 //   - port: 预览服务端口
 // limits: 限制项
 //   - maxDiffLines: 最大 diff 行数
 //   - maxFiles: 最大审查文件数
-// rules: 审查关注点，可选值: 'security' | 'performance' | 'style' | 'tests'
 // prompt: 通用提示词
 // output: 输出目录配置
 //   - dir: 本地输出目录
 export default {
   provider: 'deepseek',
-  review: { enabled: true, mode: 'aggregate' },
-  deepseek: { baseURL: 'https://api.deepseek.com', apiKeyEnv: 'DEEPSEEK_API_KEY', model: 'deepseek-chat' },
-  ollama: { baseURL: 'http://localhost:11434', model: 'qwen3:8b' },
+  providerOptions: {
+    deepseek: { baseURL: 'https://api.deepseek.com', apiKeyEnv: 'DEEPSEEK_API_KEY', model: 'deepseek-chat' },
+    ollama: { baseURL: 'http://localhost:11434', model: 'qwen3:8b' }
+    // openai: { baseURL: 'https://api.openai.com/v1', apiKeyEnv: 'OPENAI_API_KEY', model: 'gpt-4o-mini' },
+    // anthropic: { baseURL: 'https://api.anthropic.com', apiKeyEnv: 'ANTHROPIC_API_KEY', model: 'claude-3-5-sonnet' },
+    // azureOpenAI: { endpoint: 'https://your-endpoint.openai.azure.com', apiKeyEnv: 'AZURE_OPENAI_KEY', deployment: 'gpt-4o-mini', apiVersion: '2024-08-01-preview' }
+  },
   fileTypes: ['ts', 'tsx', 'js', 'jsx', 'json', 'md', 'py', 'go', 'rs'],
-  scope: 'staged',
-  ui: { openBrowser: true, theme: 'github', port: 5175 },
+  ui: { openBrowser: true, port: 5175 },
   limits: { maxDiffLines: 10000, maxFiles: 100 },
-  rules: { focus: ['security', 'performance', 'style', 'tests'] },
   prompt: '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
   output: { dir: '.code-gate' }
 }
@@ -96,7 +90,7 @@ export default {
   - 非交互环境会自动跳过。
   - 如需在非交互环境强制执行，可在 `.husky/pre-commit` 中使用：`npx code-gate hook -f`
   - 页面顶部会显示 AI 状态（是否参与、Provider、Model、错误信息）
-  - 支持按文件 Tab 展示：在配置中设置 `"review": { "mode": "per_file" }`，每个文件一个 Tab，Tabs 超出视野时横向滚动，每个文件顶部展示该文件的审查内容
+  - 默认按文件 Tab 展示：每个文件一个 Tab，Tabs 超出视野时横向滚动，每个文件顶部展示该文件的审查内容
 
 ## 故障排查
 - 页面只有 diff、没有 AI 审查内容：

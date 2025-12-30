@@ -8,12 +8,12 @@ export interface ReviewInput {
 
 export async function deepseekReview(cfg: Config, input: ReviewInput): Promise<string> {
   const baseURL =
-    (cfg.deepseek?.baseURL || 'https://api.deepseek.com').replace(/`/g, '').trim()
-  const apiKeyEnv = cfg.deepseek?.apiKeyEnv || 'DEEPSEEK_API_KEY'
+    (cfg.providerOptions?.deepseek?.baseURL || 'https://api.deepseek.com').replace(/`/g, '').trim()
+  const apiKeyEnv = cfg.providerOptions?.deepseek?.apiKeyEnv || 'DEEPSEEK_API_KEY'
   const apiKey = process.env[apiKeyEnv]
   if (!apiKey) throw new Error(`Missing DeepSeek API key in ${apiKeyEnv}`)
   const client = new OpenAI({ baseURL, apiKey })
-  const model = cfg.deepseek?.model || 'deepseek-chat'
+  const model = cfg.providerOptions?.deepseek?.model || 'deepseek-chat'
   const res = await client.chat.completions.create({
     model,
     messages: [
