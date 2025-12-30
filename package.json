@@ -1,0 +1,52 @@
+{
+  "name": "code-gate",
+  "version": "0.1.0",
+  "description": "AI-assisted code review at git commit using local Ollama or DeepSeek API, with GitHub-style diff UI.",
+  "type": "module",
+  "bin": {
+    "code-gate": "bin/code-gate.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "keywords": [
+    "git",
+    "commit",
+    "code review",
+    "DeepSeek",
+    "Ollama",
+    "diff2html"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://example.com/your-repo-url.git"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -w -p tsconfig.json",
+    "clean": "rimraf dist",
+    "dev": "node --enable-source-maps dist/cli.js",
+    "setup": "node --enable-source-maps dist/commands/setup.js",
+    "hook": "node --enable-source-maps dist/commands/hook.js",
+    "prepare": "npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "diff2html": "^3.4.47",
+    "highlight.js": "^11.9.0",
+    "openai": "^4.60.0",
+    "yaml": "^2.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.5",
+    "typescript": "^5.6.3",
+    "rimraf": "^6.0.1"
+  }
+}
