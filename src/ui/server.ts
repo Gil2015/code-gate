@@ -3,7 +3,7 @@ import os from 'node:os'
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawn } from 'node:child_process'
-import { Config } from '../config.js'
+import { Config } from '../config/index.js'
 
 export async function serveReview(
   cfg: Config,
@@ -34,7 +34,6 @@ export async function serveReview(
   return new Promise((resolve) => {
     server.listen(port, () => {
       const url = `http://localhost:${port}${route}`
-      process.stdout.write(`预览地址：${url}\n`)
       const shouldOpen = typeof openNow === 'boolean' ? openNow : openCfg
       if (shouldOpen) openBrowser(url)
       server.unref()
@@ -44,7 +43,6 @@ export async function serveReview(
       const p = path.join(os.tmpdir(), `code-gate-${id}.html`)
       fs.writeFileSync(p, html, 'utf8')
       const url = `file://${p}`
-      process.stdout.write(`预览地址：${url}\n`)
       const shouldOpen = typeof openNow === 'boolean' ? openNow : openCfg
       if (shouldOpen) openBrowser(url)
       resolve(url)
@@ -59,9 +57,9 @@ export function saveOutput(cfg: Config, id: string, html: string) {
     fs.mkdirSync(p, { recursive: true })
     const fp = path.join(p, `review-${id}.html`)
     fs.writeFileSync(fp, html, 'utf8')
-    process.stdout.write(`已保存审查页面：${fp}\n`)
+    // process.stdout.write(`已保存审查页面：${fp}\n`)
   } catch (e) {
-    process.stderr.write(`保存审查页面失败：${(e as any)?.message || e}\n`)
+    // process.stderr.write(`保存审查页面失败：${(e as any)?.message || e}\n`)
   }
 }
 

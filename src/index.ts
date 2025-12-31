@@ -1,1 +1,1 @@
-export * from './cli.js'
+export * from './cli/index.js'

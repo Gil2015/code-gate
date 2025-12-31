@@ -38,15 +38,23 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@clack/prompts": "^0.11.0",
     "commander": "^12.1.0",
     "diff2html": "^3.4.47",
+    "dompurify": "^3.3.1",
     "highlight.js": "^11.9.0",
+    "jsdom": "^27.0.1",
+    "marked": "^17.0.1",
     "openai": "^4.60.0",
+    "picocolors": "^1.1.1",
     "yaml": "^2.6.0"
   },
   "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "@types/jsdom": "^27.0.0",
+    "@types/marked": "^5.0.2",
     "@types/node": "^22.7.5",
-    "typescript": "^5.6.3",
-    "rimraf": "^6.0.1"
+    "rimraf": "^6.0.1",
+    "typescript": "^5.6.3"
   }
 }

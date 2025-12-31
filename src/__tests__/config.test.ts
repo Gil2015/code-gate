@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { loadConfig } from '../config.js'
+import { loadConfig } from '../config/index.js'
 
 function withTempConfig(content: any, ext = '.json') {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'code-gate-test-'))

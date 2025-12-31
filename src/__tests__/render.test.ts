@@ -1,4 +1,4 @@
-import { renderHTML } from '../ui/render.js'
+import { renderReviewItem } from '../ui/render/html.js'
 
 const sampleDiff = `diff --git a/a.txt b/a.txt
 index e69de29..4b825dc 100644
@@ -8,10 +8,28 @@ index e69de29..4b825dc 100644
 +hello
 `
 
-function run() {
-  const html = renderHTML(sampleDiff, 'review')
-  if (!html.includes('Code Review')) throw new Error('render failed')
-  process.stdout.write('render.test passed\n')
+const sampleReview = 'Looks good'
+
+function test(name: string, fn: () => void) {
+  try {
+    fn()
+    console.log(`PASS: ${name}`)
+  } catch (e) {
+    console.error(`FAIL: ${name}`, e)
+    process.exit(1)
+  }
 }
 
-run()
+function expect(actual: any) {
+  return {
+    toContain(expected: string) {
+      if (!actual.includes(expected)) throw new Error(`Expected "${actual}" to contain "${expected}"`)
+    }
+  }
+}
+
+test('renders diff and review', () => {
+  const item = renderReviewItem({ file: 'a.txt', review: sampleReview, diff: sampleDiff })
+  expect(item.reviewHtml).toContain('Looks good')
+  expect(item.diffHtml).toContain('d2h-file-header')
+})
