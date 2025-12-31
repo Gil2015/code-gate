@@ -23,7 +23,7 @@ export function renderHTML(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>code-gate review</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <style>
 body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 .container{max-width:1200px;margin:24px auto;padding:0 16px}
@@ -31,7 +31,7 @@ body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetic
 .meta{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .badge{display:inline-block;background:#eaeef2;border:1px solid #d0d7de;border-radius:999px;padding:4px 10px;font-size:12px;color:#24292f}
 .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
-.hljs{border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace}
+.hljs{background:#f6f8fa;border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;font-size:12px;padding:12px}
 </style>
 </head>
 <body>
@@ -111,7 +111,7 @@ export function renderHTMLTabs(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>code-gate review</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
@@ -120,23 +120,34 @@ export function renderHTMLTabs(
 *{box-sizing:border-box}
 html,body{height:100%;}
 body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;overflow:hidden}
-.container{width:100%;max-width:100%;margin:0 auto;padding:16px}
-.tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0;border-bottom:1px solid #d0d7de}
-.tab{flex:0 0 auto;background:#f0f2f5;border:1px solid #d0d7de;border-radius:4px;padding:8px 12px;font-size:12px;color:#24292f;cursor:pointer}
-.tab.active{background:#0969da;color:#fff;border-color:#0969da}
-.pane{display:none;padding-top:12px}
+.container{width:100%;max-width:100%;margin:0 auto;padding:16px;height:100%;display:flex;flex-direction:column}
+.tabs{display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #d0d7de;flex:0 0 auto;scrollbar-width:thin}
+.tab{flex:0 0 auto;background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px;font-size:14px;color:#57606a;cursor:pointer;transition:color 0.2s;white-space:nowrap}
+.tab:hover{color:#24292f;border-bottom-color:#d0d7de}
+.tab.active{color:#24292f;border-bottom-color:#0969da}
+.panes{flex:1;overflow:hidden;position:relative}
+.pane{display:none;height:100%;padding-top:12px}
 .pane.active{display:block}
-.split{display:flex;gap:12px;align-items:stretch}
-.panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;height:calc(100vh - 180px);flex:1 1 50%;min-width:0;max-width:50%}
-.panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa}
-.review-body{padding:12px;overflow:auto}
+.split{display:flex;gap:12px;align-items:stretch;height:100%}
+.panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;flex:1 1 50%;min-width:0;max-width:50%;height:100%}
+.panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa;flex:0 0 auto}
+.review-body{padding:16px;overflow:auto;flex:1;font-size:14px;line-height:1.5;color:#24292f}
+.review-body h1,.review-body h2,.review-body h3{margin-top:24px;margin-bottom:16px;font-weight:600;line-height:1.25}
+.review-body h1{font-size:2em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
+.review-body h2{font-size:1.5em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
+.review-body h3{font-size:1.25em}
+.review-body p{margin-top:0;margin-bottom:16px}
+.review-body blockquote{margin:0 0 16px;padding:0 1em;color:#57606a;border-left:.25em solid #d0d7de}
+.review-body ul,.review-body ol{margin-top:0;margin-bottom:16px;padding-left:2em}
+.review-body a{color:#0969da;text-decoration:none}
+.review-body a:hover{text-decoration:underline}
 .review-body.empty{color:#57606a}
-.diff-body{padding:12px;overflow:auto}
+.diff-body{padding:12px;overflow:auto;flex:1;display:flex;flex-direction:column}
 .diff-body .d2h-code-side-linenumber,.diff-body .d2h-code-linenumber{position:static!important}
 .meta{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .badge{display:inline-block;background:#eaeef2;border:1px solid #d0d7de;border-radius:999px;padding:4px 10px;font-size:12px;color:#24292f}
 .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
-.hljs{border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace}
+.hljs{background:#f6f8fa;border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;font-size:12px;padding:12px}
 </style>
 </head>
 <body>
@@ -206,7 +217,7 @@ export function renderHTMLLive(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>code-gate review</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
@@ -215,24 +226,35 @@ export function renderHTMLLive(
   *{box-sizing:border-box}
   html,body{height:100%;}
   body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;overflow:hidden}
-  .container{width:100%;max-width:100%;margin:0 auto;padding:16px}
-  .tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0;border-bottom:1px solid #d0d7de}
-  .tab{flex:0 0 auto;background:#f0f2f5;border:1px solid #d0d7de;border-radius:4px;padding:8px 12px;font-size:12px;color:#24292f;cursor:pointer}
-  .tab.active{background:#0969da;color:#fff;border-color:#0969da}
-  .pane{display:none;padding-top:12px}
-  .pane.active{display:block}
-  .split{display:flex;gap:12px;align-items:stretch}
-  .panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;height:calc(100vh - 180px);flex:1 1 50%;min-width:0;max-width:50%}
-  .panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa}
-  .review-body{padding:12px;overflow:auto}
-  .review-body.empty{color:#57606a}
-  .diff-body{padding:12px;overflow:auto}
+  .container{width:100%;max-width:100%;margin:0 auto;padding:16px;height:100%;display:flex;flex-direction:column}
+.tabs{display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #d0d7de;flex:0 0 auto;scrollbar-width:thin}
+.tab{flex:0 0 auto;background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px;font-size:14px;color:#57606a;cursor:pointer;transition:color 0.2s;white-space:nowrap}
+.tab:hover{color:#24292f;border-bottom-color:#d0d7de}
+.tab.active{color:#24292f;border-bottom-color:#0969da}
+.panes{flex:1;overflow:hidden;position:relative}
+.pane{display:none;height:100%;padding-top:12px}
+.pane.active{display:block}
+.split{display:flex;gap:12px;align-items:stretch;height:100%}
+.panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;flex:1 1 50%;min-width:0;max-width:50%;height:100%}
+.panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa;flex:0 0 auto}
+.review-body{padding:16px;overflow:auto;flex:1;font-size:14px;line-height:1.5;color:#24292f}
+.review-body h1,.review-body h2,.review-body h3{margin-top:24px;margin-bottom:16px;font-weight:600;line-height:1.25}
+.review-body h1{font-size:2em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
+.review-body h2{font-size:1.5em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
+.review-body h3{font-size:1.25em}
+.review-body p{margin-top:0;margin-bottom:16px}
+.review-body blockquote{margin:0 0 16px;padding:0 1em;color:#57606a;border-left:.25em solid #d0d7de}
+.review-body ul,.review-body ol{margin-top:0;margin-bottom:16px;padding-left:2em}
+.review-body a{color:#0969da;text-decoration:none}
+.review-body a:hover{text-decoration:underline}
+.review-body.empty{color:#57606a}
+.diff-body{padding:12px;overflow:auto;flex:1;display:flex;flex-direction:column}
   .diff-body .d2h-code-side-linenumber,.diff-body .d2h-code-linenumber{position:static!important}
   .meta{display:flex;gap:8px;align-items:center;margin-bottom:12px}
   .badge{display:inline-block;background:#eaeef2;border:1px solid #d0d7de;border-radius:999px;padding:4px 10px;font-size:12px;color:#24292f}
   .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
   .notice{margin:8px 0;color:#57606a}
-  .hljs{border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace}
+  .hljs{background:#f6f8fa;border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;font-size:12px;padding:12px}
   </style>
 </head>
 <body>
