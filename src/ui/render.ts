@@ -23,6 +23,7 @@ export function renderHTML(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>code-gate review</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <style>
 body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
 .container{max-width:1200px;margin:24px auto;padding:0 16px}
@@ -30,6 +31,7 @@ body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetic
 .meta{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .badge{display:inline-block;background:#eaeef2;border:1px solid #d0d7de;border-radius:999px;padding:4px 10px;font-size:12px;color:#24292f}
 .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
+.hljs{border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace}
 </style>
 </head>
 <body>
@@ -39,6 +41,18 @@ ${badge}
 ${reviewHtml}
 ${diffHtml}
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('pre code').forEach((el) => {
+    if (el.classList.contains('language-tsx')) {
+      el.classList.remove('language-tsx');
+      el.classList.add('language-typescript');
+    }
+    hljs.highlightElement(el);
+  });
+});
+</script>
 </body>
 </html>`
   return page
@@ -52,6 +66,14 @@ export function renderHTMLTabs(
   files: Array<{ file: string; review: string; diff: string }>,
   meta?: { aiInvoked?: boolean; aiSucceeded?: boolean; provider?: string; model?: string; status?: string }
 ): string {
+  const reviewsArr = files.map((f) =>
+    (f.review || '')
+      .replace(/<\/script/gi, '<\\/script')
+      .replace(/<\/style/gi, '<\\/style')
+      .replace(/<\/textarea/gi, '<\\/textarea')
+  )
+  const reviewsJson = JSON.stringify(reviewsArr)
+  const reviewsB64 = Buffer.from(reviewsJson, 'utf8').toString('base64')
   const tabs = files
     .map((f, i) => `<button type="button" class="tab" data-idx="${i}" title="${escapeHtml(f.file)}">${escapeHtml(f.file)}</button>`)
     .join('')
@@ -89,8 +111,11 @@ export function renderHTMLTabs(
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>code-gate review</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <style>
 *{box-sizing:border-box}
 html,body{height:100%;}
@@ -111,6 +136,7 @@ body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetic
 .meta{display:flex;gap:8px;align-items:center;margin-bottom:12px}
 .badge{display:inline-block;background:#eaeef2;border:1px solid #d0d7de;border-radius:999px;padding:4px 10px;font-size:12px;color:#24292f}
 .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
+.hljs{border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace}
 </style>
 </head>
 <body>
@@ -121,6 +147,8 @@ ${badge}
 ${panes}
 </div>
 <script>
+function _decodeB64Json(b){ try { return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch(e){ return []; } }
+const _reviews_b64 = ${JSON.stringify(reviewsB64)};
 const tabs=[...document.querySelectorAll('.tab')];
 const panes=[...document.querySelectorAll('.pane')];
 function activate(i){
@@ -129,17 +157,159 @@ function activate(i){
 }
 tabs.forEach(t=>t.addEventListener('click',()=>activate(t.dataset.idx)));
 activate(0);
-// Render markdown reviews
-try{
-  const reviews=${JSON.stringify(files.map(f=>f.review || ''))};
+  // Render markdown reviews
+  try{
+  const reviews=_decodeB64Json(_reviews_b64);
   reviews.forEach((md,i)=>{
     const el=document.querySelector(\`.pane[data-idx="\${i}"] .review-body\`);
     if(el && md){
       const html=DOMPurify.sanitize(marked.parse(md));
       el.innerHTML=html;
+      try{
+        const blocks=el.querySelectorAll('pre code');
+        blocks.forEach((code)=>{
+          if (code.classList.contains('language-tsx')) {
+            code.classList.remove('language-tsx');
+            code.classList.add('language-typescript');
+          }
+          hljs.highlightElement(code);
+        });
+      }catch(e){}
     }
   })
 }catch(e){}
+</script>
+</body>
+</html>`
+  return page
+}
+
+export function renderHTMLLive(
+  id: string,
+  meta?: { aiInvoked?: boolean; aiSucceeded?: boolean; provider?: string; model?: string; status?: string },
+  initial?: Array<{ file: string; review: string; diff: string }>
+): string {
+  const initialJsonLive = JSON.stringify(initial || [])
+  const initialB64 = Buffer.from(initialJsonLive, 'utf8').toString('base64')
+  const badge = meta
+    ? `<div class="meta">
+  <span class="badge">AI: ${meta.aiInvoked ? (meta.aiSucceeded ? '参与' : '尝试失败') : '未参与'}</span>
+  ${meta.provider ? `<span class="badge">Provider: ${escapeHtml(meta.provider)}</span>` : ''}
+  ${meta.model ? `<span class="badge">Model: ${escapeHtml(meta.model)}</span>` : ''}
+  ${meta.status ? `<div class="status">${escapeHtml(meta.status)}</div>` : ''}
+</div>`
+    : ''
+  const page = `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>code-gate review</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/diff2html/bundles/css/diff2html.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/diff2html/bundles/js/diff2html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+  *{box-sizing:border-box}
+  html,body{height:100%;}
+  body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;overflow:hidden}
+  .container{width:100%;max-width:100%;margin:0 auto;padding:16px}
+  .tabs{display:flex;gap:8px;overflow-x:auto;padding:8px 0;border-bottom:1px solid #d0d7de}
+  .tab{flex:0 0 auto;background:#f0f2f5;border:1px solid #d0d7de;border-radius:4px;padding:8px 12px;font-size:12px;color:#24292f;cursor:pointer}
+  .tab.active{background:#0969da;color:#fff;border-color:#0969da}
+  .pane{display:none;padding-top:12px}
+  .pane.active{display:block}
+  .split{display:flex;gap:12px;align-items:stretch}
+  .panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;height:calc(100vh - 180px);flex:1 1 50%;min-width:0;max-width:50%}
+  .panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa}
+  .review-body{padding:12px;overflow:auto}
+  .review-body.empty{color:#57606a}
+  .diff-body{padding:12px;overflow:auto}
+  .diff-body .d2h-code-side-linenumber,.diff-body .d2h-code-linenumber{position:static!important}
+  .meta{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+  .badge{display:inline-block;background:#eaeef2;border:1px solid #d0d7de;border-radius:999px;padding:4px 10px;font-size:12px;color:#24292f}
+  .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
+  .notice{margin:8px 0;color:#57606a}
+  .hljs{border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace}
+  </style>
+</head>
+<body>
+<div class="container">
+<h1>Code Review <span class="status-text" style="font-size:14px;color:#57606a;font-weight:normal;">后台继续审查中…</span></h1>
+${badge}
+<div class="tabs"></div>
+<div class="panes"></div>
+</div>
+<script>
+const route = ${JSON.stringify('/review/' + id + '/status')};
+function _decodeB64Json(b){ try { return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch(e){ return []; } }
+const initial=_decodeB64Json(${JSON.stringify(initialB64)});
+const tabs=document.querySelector('.tabs');
+const panes=document.querySelector('.panes');
+const known=new Set();
+function activate(i){
+  [...tabs.children].forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  [...panes.children].forEach((p,idx)=>p.classList.toggle('active',idx===i));
+}
+function addItem(item){
+  if(known.has(item.file))return;
+  known.add(item.file);
+  const i=[...known].length-1;
+  const t=document.createElement('button');
+  t.type='button';
+  t.className='tab';
+  t.title=item.file;
+  t.textContent=item.file;
+  t.addEventListener('click',()=>activate(i));
+  tabs.appendChild(t);
+  const p=document.createElement('div');
+  p.className='pane';
+  const reviewHtml=item.review?DOMPurify.sanitize(marked.parse(item.review)):'<div class=\"review-body empty\">暂无审查内容</div>';
+  const parsed=window.Diff2Html.parse(item.diff,{inputFormat:'diff'});
+  const diffHtml=window.Diff2Html.html(parsed,{ showFiles:false, matching:'lines' });
+  p.innerHTML='<div class=\"split\"><div class=\"panel panel-left\"><div class=\"panel-title\">AI Review</div><div class=\"review-body\">'+reviewHtml+'</div></div><div class=\"panel panel-right\"><div class=\"panel-title\">Diff</div><div class=\"diff-body\">'+diffHtml+'</div></div></div>';
+  panes.appendChild(p);
+  try{
+    const el=p.querySelector('.review-body');
+    const blocks=el?el.querySelectorAll('pre code'):[];
+    blocks.forEach((code)=>{
+      if (code.classList.contains('language-tsx')) {
+        code.classList.remove('language-tsx');
+        code.classList.add('language-typescript');
+      }
+      hljs.highlightElement(code);
+    });
+  }catch(e){}
+  if(i===0)activate(0);
+  try{
+    const aiBadge=document.querySelector('.meta .badge');
+    if(aiBadge && aiBadge.textContent && aiBadge.textContent.indexOf('AI:')===0){
+      aiBadge.textContent='AI: 参与';
+    }
+  }catch(e){}
+}
+async function poll(){
+  try{
+    const res=await fetch(route);
+    if(!res.ok) {
+      const n=document.querySelector('.status-text');
+      if(n && known.size>0) n.textContent='全部完成';
+      return;
+    }
+    const data=await res.json();
+    const list=data && Array.isArray(data.files)?data.files:[];
+    list.forEach(it=>{ if(it && it.done) addItem(it); });
+    if(data.done) {
+      const n=document.querySelector('.status-text');
+      if(n) n.textContent='全部完成';
+    }
+  }catch(e){}
+}
+setInterval(poll,5000);
+try{ initial.forEach(addItem); }catch(e){}
+poll();
 </script>
 </body>
 </html>`

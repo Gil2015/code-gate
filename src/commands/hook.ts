@@ -13,6 +13,11 @@ function askYesNo(question: string) {
     const rl = readline.createInterface({ input, output: process.stdout })
     rl.question(question, (answer) => {
       rl.close()
+      if (input !== process.stdin && typeof (input as any)?.close === 'function') {
+        try {
+          ;(input as any).close()
+        } catch {}
+      }
       resolve(answer.trim().toLowerCase() === 'y')
     })
   })

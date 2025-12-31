@@ -79,23 +79,28 @@ function generateConfig(cwd: string, force = false) {
 //   - ollama: { baseURL, model }
 //   - openai: { baseURL, apiKeyEnv, model }
 //   - anthropic: { baseURL, apiKeyEnv, model }
+//   - gemini: { baseURL, apiKeyEnv, model }
+//   - cohere: { baseURL, apiKeyEnv, model }
+//   - mistral: { baseURL, apiKeyEnv, model }
 //   - azureOpenAI: { endpoint, apiKeyEnv, deployment, apiVersion }
 // fileTypes: 需要审查的文件类型扩展名列表
 // ui: 页面与交互设置
 //   - openBrowser: 是否自动打开浏览器
 //   - port: 预览服务端口
+// 并发：providerOptions.<provider>.concurrencyFiles 控制按文件的并发审查（默认 DeepSeek=4、Ollama=1，最大 8）
 // limits: 限制项
 //   - maxDiffLines: 最大 diff 行数
 //   - maxFiles: 最大审查文件数
 // prompt: 通用提示词
+// 行为：reviewMode 审查模式：'summary' | 'files' | 'both'（默认 'files'；'both' 时汇总最后执行）
 // output: 输出目录配置
 //   - dir: 本地输出目录
 
 export default {
   provider: 'deepseek',
   providerOptions: {
-    deepseek: { baseURL: 'https://api.deepseek.com', apiKeyEnv: 'DEEPSEEK_API_KEY', model: 'deepseek-chat' },
-    ollama: { baseURL: 'http://localhost:11434', model: 'qwen3:8b' }
+    deepseek: { baseURL: 'https://api.deepseek.com', apiKeyEnv: 'DEEPSEEK_API_KEY', model: 'deepseek-chat', concurrencyFiles: 4, request: { retries: 1, backoffMs: 300 } },
+    ollama: { baseURL: 'http://localhost:11434', model: 'qwen3:8b', concurrencyFiles: 1, request: { timeout: 15000, retries: 1, backoffMs: 300 } }
     // openai: { baseURL: 'https://api.openai.com/v1', apiKeyEnv: 'OPENAI_API_KEY', model: 'gpt-4o-mini' },
     // anthropic: { baseURL: 'https://api.anthropic.com', apiKeyEnv: 'ANTHROPIC_API_KEY', model: 'claude-3-5-sonnet' },
     // azureOpenAI: { endpoint: 'https://your-endpoint.openai.azure.com', apiKeyEnv: 'AZURE_OPENAI_KEY', deployment: 'gpt-4o-mini', apiVersion: '2024-08-01-preview' }
@@ -103,6 +108,7 @@ export default {
   fileTypes: ['ts', 'tsx', 'js', 'jsx', 'json', 'md', 'py', 'go', 'rs'],
   ui: { openBrowser: true, port: 5175 },
   limits: { maxDiffLines: 10000, maxFiles: 100 },
+  reviewMode: 'files',
   prompt: '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
   output: { dir: '.code-gate' }
 }
