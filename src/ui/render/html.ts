@@ -3,7 +3,7 @@ import { JSDOM } from 'jsdom'
 import createDOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 import { parse, html as d2hHtml } from 'diff2html'
-import { getAssets, CUSTOM_CSS, CLIENT_SCRIPT } from './assets.js'
+import { getAssets, CUSTOM_CSS, CLIENT_SCRIPT, LOGO_BASE64, GITHUB_SVG } from './assets.js'
 
 // Setup JSDOM for DOMPurify
 const window = new JSDOM('').window
@@ -127,10 +127,16 @@ export function renderHTMLTabs(
     : ''
 
   const header = `<div class="header-row">
+    <img src="${LOGO_BASE64}" class="logo" alt="Code Gate Logo" />
     <h1>Code Review</h1>
     ${meta?.subtitle ? `<div class="subtitle">${escapeHtml(meta.subtitle)}</div>` : ''}
   </div>
-  ${meta?.datetime ? `<div class="timestamp">${escapeHtml(meta.datetime)}</div>` : ''}
+  <div class="top-right-area">
+    <a href="https://github.com/Gil2015/code-gate" target="_blank" class="github-link" aria-label="GitHub Repo">
+      ${GITHUB_SVG}
+    </a>
+    ${meta?.datetime ? `<div class="timestamp">${escapeHtml(meta.datetime)}</div>` : ''}
+  </div>
   `
 
   const script = `
@@ -188,10 +194,16 @@ export function renderHTMLLive(
     : ''
 
   const header = `<div class="header-row">
+    <img src="${LOGO_BASE64}" class="logo" alt="Code Gate Logo" />
     <h1>Code Review</h1>
     ${meta?.subtitle ? `<div class="subtitle">${escapeHtml(meta.subtitle)}</div>` : ''}
   </div>
-  ${meta?.datetime ? `<div class="timestamp">${escapeHtml(meta.datetime)}</div>` : ''}
+  <div class="top-right-area">
+    <a href="https://github.com/Gil2015/code-gate" target="_blank" class="github-link" aria-label="GitHub Repo">
+      ${GITHUB_SVG}
+    </a>
+    ${meta?.datetime ? `<div class="timestamp">${escapeHtml(meta.datetime)}</div>` : ''}
+  </div>
   `
 
   const head = `
