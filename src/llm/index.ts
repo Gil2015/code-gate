@@ -8,6 +8,9 @@ import { GeminiProvider } from './providers/gemini.js'
 import { MistralProvider } from './providers/mistral.js'
 import { CohereProvider } from './providers/cohere.js'
 import { AzureOpenAIProvider } from './providers/azure.js'
+import { AliyunProvider } from './providers/aliyun.js'
+import { VolcengineProvider } from './providers/volcengine.js'
+import { ZhipuProvider } from './providers/zhipu.js'
 
 export * from './base.js'
 
@@ -29,6 +32,12 @@ export function createLLMProvider(config: Config): LLMProvider {
       return new CohereProvider(config)
     case 'azureOpenAI':
       return new AzureOpenAIProvider(config)
+    case 'aliyun':
+      return new AliyunProvider(config)
+    case 'volcengine':
+      return new VolcengineProvider(config)
+    case 'zhipu':
+      return new ZhipuProvider(config)
     default:
       throw new Error(`Unsupported provider: ${config.provider}`)
   }

@@ -1,4 +1,4 @@
-export type Provider = 'ollama' | 'deepseek' | 'openai' | 'anthropic' | 'gemini' | 'cohere' | 'mistral' | 'azureOpenAI'
+export type Provider = 'ollama' | 'deepseek' | 'openai' | 'anthropic' | 'gemini' | 'cohere' | 'mistral' | 'azureOpenAI' | 'aliyun' | 'volcengine' | 'zhipu'
 
 export interface ProviderRequestOptions {
   timeout?: number
@@ -11,6 +11,7 @@ export interface ProviderRequestOptions {
 
 export interface ProviderConfig {
   baseURL?: string
+  apiKey?: string
   apiKeyEnv?: string
   model?: string
   concurrencyFiles?: number
@@ -35,6 +36,9 @@ export interface Config {
     cohere?: ProviderConfig
     mistral?: ProviderConfig
     azureOpenAI?: AzureOpenAIConfig
+    aliyun?: ProviderConfig
+    volcengine?: ProviderConfig
+    zhipu?: ProviderConfig
   }
   fileTypes?: string[]
   ui?: {

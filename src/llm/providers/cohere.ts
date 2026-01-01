@@ -4,10 +4,10 @@ export class CohereProvider extends BaseLLMProvider {
   async review(input: ReviewInput): Promise<string> {
     const opts = this.config.providerOptions?.cohere
     const apiKeyEnv = opts?.apiKeyEnv || 'CO_API_KEY'
-    const apiKey = process.env[apiKeyEnv]
+    const apiKey = process.env[apiKeyEnv] || opts?.apiKey
 
     if (!apiKey) {
-      throw new Error(`Missing Cohere API key in environment variable: ${apiKeyEnv}`)
+      throw new Error(`Missing Cohere API key. Please set ${apiKeyEnv} in environment variables or configure 'apiKey' in .codegate.js`)
     }
 
     const baseURL = opts?.baseURL || 'https://api.cohere.ai/v1'

@@ -1,6 +1,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
+import { confirm, intro, outro, log } from '@clack/prompts'
+import picocolors from 'picocolors'
 
 function writeFileSafe(p: string, content: string) {
   fs.mkdirSync(path.dirname(p), { recursive: true })
@@ -75,14 +77,18 @@ function generateConfig(cwd: string, force = false) {
   const content = `// code-gate 配置文件
 // provider: 选择使用的 AI 审查引擎，可选值: 'ollama' | 'deepseek'
 // providerOptions: 各 Provider 的配置集合（选填）
-//   - deepseek: { baseURL, apiKeyEnv, model }
+//   - deepseek: { baseURL, apiKey, apiKeyEnv, model }
 //   - ollama: { baseURL, model }
-//   - openai: { baseURL, apiKeyEnv, model }
-//   - anthropic: { baseURL, apiKeyEnv, model }
-//   - gemini: { baseURL, apiKeyEnv, model }
-//   - cohere: { baseURL, apiKeyEnv, model }
-//   - mistral: { baseURL, apiKeyEnv, model }
-//   - azureOpenAI: { endpoint, apiKeyEnv, deployment, apiVersion }
+//   - openai: { baseURL, apiKey, apiKeyEnv, model }
+//   - anthropic: { baseURL, apiKey, apiKeyEnv, model }
+//   - gemini: { baseURL, apiKey, apiKeyEnv, model }
+//   - cohere: { baseURL, apiKey, apiKeyEnv, model }
+//   - mistral: { baseURL, apiKey, apiKeyEnv, model }
+//   - azureOpenAI: { endpoint, apiKey, apiKeyEnv, deployment, apiVersion }
+//   - aliyun: { baseURL, apiKey, apiKeyEnv, model }
+//   - volcengine: { baseURL, apiKey, apiKeyEnv, model }
+//   - zhipu: { baseURL, apiKey, apiKeyEnv, model }
+//   注：apiKey 优先级：环境变量(apiKeyEnv) > 配置文件(apiKey)
 // fileTypes: 需要审查的文件类型扩展名列表
 // ui: 页面与交互设置
 //   - openBrowser: 是否自动打开浏览器
@@ -104,6 +110,9 @@ export default {
     // openai: { baseURL: 'https://api.openai.com/v1', apiKeyEnv: 'OPENAI_API_KEY', model: 'gpt-4o-mini' },
     // anthropic: { baseURL: 'https://api.anthropic.com', apiKeyEnv: 'ANTHROPIC_API_KEY', model: 'claude-3-5-sonnet' },
     // azureOpenAI: { endpoint: 'https://your-endpoint.openai.azure.com', apiKeyEnv: 'AZURE_OPENAI_KEY', deployment: 'gpt-4o-mini', apiVersion: '2024-08-01-preview' }
+    // aliyun: { baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1', apiKeyEnv: 'DASHSCOPE_API_KEY', model: 'qwen-plus' },
+    // volcengine: { baseURL: 'https://ark.cn-beijing.volces.com/api/v3', apiKeyEnv: 'VOLCENGINE_API_KEY', model: 'doubao-pro-32k' },
+    // zhipu: { baseURL: 'https://open.bigmodel.cn/api/paas/v4', apiKeyEnv: 'ZHIPU_API_KEY', model: 'glm-4' }
   },
   fileTypes: ['ts', 'tsx', 'js', 'jsx', 'json', 'md', 'py', 'go', 'rs'],
   ui: { openBrowser: true, port: 5175 },
@@ -117,10 +126,44 @@ export default {
   process.stdout.write('code-gate: generated .codegate.js\n')
 }
 
+async function checkAndAddToGitignore(cwd: string) {
+  const ignoreList = ['.codegate.js', '.code-gate']
+  const gitignorePath = path.join(cwd, '.gitignore')
+  
+  // Filter out already ignored
+  let content = ''
+  if (fs.existsSync(gitignorePath)) {
+    content = fs.readFileSync(gitignorePath, 'utf8')
+  }
+  
+  const toAdd = ignoreList.filter(item => !content.includes(item))
+  
+  if (toAdd.length === 0) return
+
+  log.info(picocolors.yellow('检测到以下文件建议添加到 .gitignore:'))
+  for (const item of toAdd) {
+    console.log(picocolors.dim(`  - ${item}`))
+  }
+
+  const shouldIgnore = await confirm({
+    message: '是否将上述文件添加到 .gitignore 配置中？',
+    initialValue: true
+  })
+
+  if (shouldIgnore === true) {
+    const append = (content.endsWith('\n') || content === '') ? '' : '\n'
+    fs.appendFileSync(gitignorePath, `${append}${toAdd.join('\n')}\n`, 'utf8')
+    log.success(picocolors.green('已更新 .gitignore'))
+  }
+}
+
 export async function runInit(method: string, genConfig: boolean, force = false) {
   const cwd = process.cwd()
+  
+  intro(picocolors.bgBlue(picocolors.white(' Code Gate Init ')))
+
   if (!isGitRepo(cwd)) {
-    process.stderr.write('code-gate: not a git repository\n')
+    log.error('not a git repository')
     process.exit(1)
     return
   }
@@ -128,4 +171,8 @@ export async function runInit(method: string, genConfig: boolean, force = false)
   else if (method === 'simple') initSimpleGitHooks(cwd)
   else initGitHooks(cwd)
   if (genConfig) generateConfig(cwd, force)
+
+  await checkAndAddToGitignore(cwd)
+  
+  outro(picocolors.green('Initialization completed!'))
 }

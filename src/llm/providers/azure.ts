@@ -5,7 +5,7 @@ export class AzureOpenAIProvider extends BaseLLMProvider {
   async review(input: ReviewInput): Promise<string> {
     const opts = this.config.providerOptions?.azureOpenAI
     const apiKeyEnv = opts?.apiKeyEnv || 'AZURE_OPENAI_API_KEY'
-    const apiKey = process.env[apiKeyEnv]
+    const apiKey = process.env[apiKeyEnv] || opts?.apiKey
     
     // Azure specific config
     const endpoint = opts?.endpoint
@@ -13,7 +13,7 @@ export class AzureOpenAIProvider extends BaseLLMProvider {
     const apiVersion = opts?.apiVersion || '2024-08-01-preview'
 
     if (!apiKey) {
-      throw new Error(`Missing Azure OpenAI API key in environment variable: ${apiKeyEnv}`)
+      throw new Error(`Missing Azure OpenAI API key. Please set ${apiKeyEnv} in environment variables or configure 'apiKey' in .codegate.js`)
     }
     if (!endpoint) {
       throw new Error('Missing Azure OpenAI endpoint in config')

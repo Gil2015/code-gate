@@ -5,10 +5,10 @@ export class OpenAIProvider extends BaseLLMProvider {
   async review(input: ReviewInput): Promise<string> {
     const opts = this.config.providerOptions?.openai
     const apiKeyEnv = opts?.apiKeyEnv || 'OPENAI_API_KEY'
-    const apiKey = process.env[apiKeyEnv]
+    const apiKey = process.env[apiKeyEnv] || opts?.apiKey
 
     if (!apiKey) {
-      throw new Error(`Missing OpenAI API key in environment variable: ${apiKeyEnv}`)
+      throw new Error(`Missing OpenAI API key. Please set ${apiKeyEnv} in environment variables or configure 'apiKey' in .codegate.js`)
     }
 
     const client = new OpenAI({

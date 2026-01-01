@@ -4,10 +4,10 @@ export class GeminiProvider extends BaseLLMProvider {
   async review(input: ReviewInput): Promise<string> {
     const opts = this.config.providerOptions?.gemini
     const apiKeyEnv = opts?.apiKeyEnv || 'GEMINI_API_KEY'
-    const apiKey = process.env[apiKeyEnv]
+    const apiKey = process.env[apiKeyEnv] || opts?.apiKey
 
     if (!apiKey) {
-      throw new Error(`Missing Gemini API key in environment variable: ${apiKeyEnv}`)
+      throw new Error(`Missing Gemini API key. Please set ${apiKeyEnv} in environment variables or configure 'apiKey' in .codegate.js`)
     }
 
     const baseURL = opts?.baseURL || 'https://generativelanguage.googleapis.com/v1beta'

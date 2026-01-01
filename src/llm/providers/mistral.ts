@@ -4,10 +4,10 @@ export class MistralProvider extends BaseLLMProvider {
   async review(input: ReviewInput): Promise<string> {
     const opts = this.config.providerOptions?.mistral
     const apiKeyEnv = opts?.apiKeyEnv || 'MISTRAL_API_KEY'
-    const apiKey = process.env[apiKeyEnv]
+    const apiKey = process.env[apiKeyEnv] || opts?.apiKey
 
     if (!apiKey) {
-      throw new Error(`Missing Mistral API key in environment variable: ${apiKeyEnv}`)
+      throw new Error(`Missing Mistral API key. Please set ${apiKeyEnv} in environment variables or configure 'apiKey' in .codegate.js`)
     }
 
     const baseURL = opts?.baseURL || 'https://api.mistral.ai/v1'

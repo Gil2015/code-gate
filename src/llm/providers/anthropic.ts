@@ -5,10 +5,10 @@ export class AnthropicProvider extends BaseLLMProvider {
   async review(input: ReviewInput): Promise<string> {
     const opts = this.config.providerOptions?.anthropic
     const apiKeyEnv = opts?.apiKeyEnv || 'ANTHROPIC_API_KEY'
-    const apiKey = process.env[apiKeyEnv]
+    const apiKey = process.env[apiKeyEnv] || opts?.apiKey
 
     if (!apiKey) {
-      throw new Error(`Missing Anthropic API key in environment variable: ${apiKeyEnv}`)
+      throw new Error(`Missing Anthropic API key. Please set ${apiKeyEnv} in environment variables or configure 'apiKey' in .codegate.js`)
     }
 
     // OpenAI SDK compatible client for Anthropic via baseURL if using a proxy, 

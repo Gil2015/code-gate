@@ -28,10 +28,10 @@ AI 助力的提交时代码 Review 工具，支持本地 Ollama 或 DeepSeek API
     - `git config core.hooksPath .githooks`
 - 配置文件生成：
   - 在项目根新建 `code-gate.config.json`（可从下文示例复制并按需调整）
-  - 如使用 DeepSeek，请在环境变量设置 `DEEPSEEK_API_KEY`
+  - 如使用 DeepSeek，请在环境变量设置 `DEEPSEEK_API_KEY`，或在配置文件中直接指定 `apiKey`（建议加入 `.gitignore`）。
 
 ## 命令
-- `npx code-gate init` 交互式初始化（可选择 git/husky/simple，并生成配置文件）
+- `npx code-gate init` 交互式初始化（可选择 git/husky/simple，自动生成配置文件，并提示是否添加配置至 .gitignore）
 - `npx code-gate setup` 快速安装原生 Git Hook
 - `npx code-gate hook` 在 Hook 中执行交互式 Review
 
@@ -51,14 +51,18 @@ AI 助力的提交时代码 Review 工具，支持本地 Ollama 或 DeepSeek API
 ```js
 // provider: 选择使用的 AI 审查引擎，可选值: 'ollama' | 'deepseek'
 // providerOptions: 各 Provider 的配置集合（选填）
-//   - deepseek: { baseURL, apiKeyEnv, model }
+//   - deepseek: { baseURL, apiKey, apiKeyEnv, model }
 //   - ollama: { baseURL, model }
-//   - openai: { baseURL, apiKeyEnv, model }
-//   - anthropic: { baseURL, apiKeyEnv, model }
-//   - gemini: { baseURL, apiKeyEnv, model }
-//   - cohere: { baseURL, apiKeyEnv, model }
-//   - mistral: { baseURL, apiKeyEnv, model }
-//   - azureOpenAI: { endpoint, apiKeyEnv, deployment, apiVersion }
+//   - openai: { baseURL, apiKey, apiKeyEnv, model }
+//   - anthropic: { baseURL, apiKey, apiKeyEnv, model }
+//   - gemini: { baseURL, apiKey, apiKeyEnv, model }
+//   - cohere: { baseURL, apiKey, apiKeyEnv, model }
+//   - mistral: { baseURL, apiKey, apiKeyEnv, model }
+//   - azureOpenAI: { endpoint, apiKey, apiKeyEnv, deployment, apiVersion }
+//   - aliyun: { baseURL, apiKey, apiKeyEnv, model }
+//   - volcengine: { baseURL, apiKey, apiKeyEnv, model }
+//   - zhipu: { baseURL, apiKey, apiKeyEnv, model }
+//   注：apiKey 可在配置文件中直接填写，或通过 apiKeyEnv 指定的环境变量读取（优先级：环境变量 > 配置文件）
 // fileTypes: 需要审查的文件类型扩展名列表
 // 并发：providerOptions.<provider>.concurrencyFiles 控制按文件的并发审查（默认 DeepSeek=4、Ollama=1，最大 8）
 // ui: 页面与交互设置
@@ -79,6 +83,9 @@ export default {
     // openai: { baseURL: 'https://api.openai.com/v1', apiKeyEnv: 'OPENAI_API_KEY', model: 'gpt-4o-mini' },
     // anthropic: { baseURL: 'https://api.anthropic.com', apiKeyEnv: 'ANTHROPIC_API_KEY', model: 'claude-3-5-sonnet' },
     // azureOpenAI: { endpoint: 'https://your-endpoint.openai.azure.com', apiKeyEnv: 'AZURE_OPENAI_KEY', deployment: 'gpt-4o-mini', apiVersion: '2024-08-01-preview' }
+    // aliyun: { baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1', apiKeyEnv: 'DASHSCOPE_API_KEY', model: 'qwen-plus' },
+    // volcengine: { baseURL: 'https://ark.cn-beijing.volces.com/api/v3', apiKeyEnv: 'VOLCENGINE_API_KEY', model: 'doubao-pro-32k' },
+    // zhipu: { baseURL: 'https://open.bigmodel.cn/api/paas/v4', apiKeyEnv: 'ZHIPU_API_KEY', model: 'glm-4' }
   },
   fileTypes: ['ts', 'tsx', 'js', 'jsx', 'json', 'md', 'py', 'go', 'rs'],
   ui: { openBrowser: true, port: 5175 },
