@@ -1,8 +1,15 @@
 import fs from 'node:fs'
+import tty from 'node:tty'
 import readline from 'node:readline'
 import { runReviewFlow } from '../../core/review.js'
 import { intro, outro, confirm as clackConfirm, spinner, isCancel, cancel } from '@clack/prompts'
 import picocolors from 'picocolors'
+
+// Hack: Try to restore TTY for git hooks
+// Removed unsafe global stdin hack
+// We will handle TTY explicitly in safeConfirm
+
+const CANCEL_SYMBOL = Symbol('cancel')
 
 function isInteractive() {
   return process.stdin.isTTY && process.stdout.isTTY
@@ -10,43 +17,110 @@ function isInteractive() {
 
 async function safeConfirm(message: string): Promise<boolean | symbol> {
   if (isInteractive()) {
-    return await clackConfirm({ message, initialValue: true })
+    return await clackConfirm({ message, initialValue: true, active: 'yes', inactive: 'no' })
   }
 
-  // Fallback for git hook non-tty environment
-  // We need to read from /dev/tty explicitly
   if (!fs.existsSync('/dev/tty')) {
-    // Should not happen if checked before
     return false
   }
 
   return new Promise((resolve) => {
-    // Open /dev/tty for reading
-    // Note: We cannot easily use fs.createReadStream because we need a raw fd for some cases,
-    // but here we just need simple text input.
-    const input = fs.createReadStream('/dev/tty')
+    const fd = fs.openSync('/dev/tty', 'r')
+    const input = new tty.ReadStream(fd)
     const output = process.stdout
-    const rl = readline.createInterface({ input, output, terminal: false })
-
-    const prefix = picocolors.magenta('◆')
-    const suffix = picocolors.dim('(Y/n)')
-    const str = `${prefix}  ${message} ${suffix} `
     
-    output.write(str)
+    readline.emitKeypressEvents(input)
+    input.setRawMode(true)
+    input.resume()
 
-    rl.question('', (answer) => {
-      rl.close()
-      // Manually destroy the stream to release the file descriptor
-      input.destroy()
+    let value = true // true = yes, false = no
+    let isDone = false
 
-      const val = answer.trim().toLowerCase()
-      // Move cursor up and clear line to simulate replacement? 
-      // Hard to do reliably in non-TTY. Just let it be.
-      // But we can print the result to look like clack.
-      // output.write(picocolors.dim(`${val === 'n' ? 'No' : 'Yes'}\n`))
+    const render = (first = false) => {
+      const prefix = picocolors.magenta('◆')
+      const bar = picocolors.dim('│')
       
-      if (val === 'n') resolve(false)
-      else resolve(true)
+      const yesIcon = value ? picocolors.green('●') : picocolors.dim('○')
+      const noIcon = !value ? picocolors.green('●') : picocolors.dim('○')
+      
+      const yesText = value ? 'yes' : picocolors.dim('yes')
+      const noText = !value ? 'no' : picocolors.dim('no')
+      
+      const options = `${yesIcon} ${yesText} / ${noIcon} ${noText}`
+
+      if (first) {
+        output.write(`${prefix}  ${message}\n`)
+        output.write(`${bar}  ${options}`)
+      } else {
+        // Clear current line (options) and rewrite
+        // \r: move to start of line
+        // \x1b[K: clear line
+        output.write(`\r\x1b[K${bar}  ${options}`)
+      }
+    }
+
+    const cleanup = () => {
+      isDone = true
+      input.setRawMode(false)
+      input.destroy()
+      output.write('\n') // End the line
+    }
+
+    const confirm = () => {
+      cleanup()
+      // Final output style: replace the prompt with a completed state
+      // Move up 2 lines (options + prompt)
+      // \x1b[1A: up 1 line
+      output.write('\x1b[1A\r\x1b[K') // Clear options line
+      output.write('\x1b[1A\r\x1b[K') // Clear prompt line
+      
+      const prefix = picocolors.green('✔')
+      const text = picocolors.dim(message)
+      output.write(`${prefix}  ${text}\n`) // Re-print simplified
+      
+      resolve(value)
+    }
+
+    const cancelOp = () => {
+      cleanup()
+      output.write('\x1b[1A\r\x1b[K') 
+      output.write('\x1b[1A\r\x1b[K')
+      
+      const prefix = picocolors.red('✖')
+      const text = picocolors.dim(message)
+      output.write(`${prefix}  ${text}\n`)
+      
+      resolve(CANCEL_SYMBOL)
+    }
+
+    render(true)
+
+    input.on('keypress', (_, key) => {
+      if (isDone) return
+
+      if (key.name === 'return' || key.name === 'enter') {
+        confirm()
+        return
+      }
+
+      if (key.ctrl && key.name === 'c') {
+        cancelOp()
+        return
+      }
+
+      if (key.name === 'left' || key.name === 'h') {
+        value = true
+        render()
+      } else if (key.name === 'right' || key.name === 'l') {
+        value = false
+        render()
+      } else if (key.name === 'y') {
+        value = true
+        render()
+      } else if (key.name === 'n') {
+        value = false
+        render()
+      }
     })
   })
 }
@@ -71,9 +145,13 @@ export async function runHook(force = false) {
 
   const shouldReview = await safeConfirm('需要进行本次提交的代码 Review 吗？')
 
-  if (isCancel(shouldReview) || !shouldReview) {
-    if (isCancel(shouldReview)) cancel('操作已取消')
-    else outro('已跳过 AI 审查')
+  if (shouldReview === CANCEL_SYMBOL || isCancel(shouldReview)) {
+    cancel('操作已取消')
+    process.exit(0)
+  }
+
+  if (!shouldReview) {
+    outro('已跳过 AI 审查')
     process.exit(0)
   }
 
@@ -102,7 +180,7 @@ export async function runHook(force = false) {
 
   const shouldCommit = await safeConfirm('Review 已完成，是否继续提交？')
 
-  if (isCancel(shouldCommit) || !shouldCommit) {
+  if (shouldCommit === CANCEL_SYMBOL || isCancel(shouldCommit) || !shouldCommit) {
     cancel('已取消提交')
     process.exit(1)
   }
