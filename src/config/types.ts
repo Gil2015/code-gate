@@ -51,6 +51,7 @@ export interface Config {
   }
   reviewMode?: 'summary' | 'files' | 'both'
   prompt?: string
+  language?: 'zh-CN' | 'en'
   output?: {
     dir?: string
   }

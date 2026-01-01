@@ -25,8 +25,9 @@ export const defaultConfig: Config = {
     maxFiles: 100
   },
   reviewMode: 'files',
+  language: 'en',
   prompt:
-    '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
+    'As a senior code review engineer, review this change from the perspectives of security, performance, code style, and test coverage. Point out issues and suggestions for improvement, and provide necessary example patches.',
   output: {
     dir: '.review-logs'
   }

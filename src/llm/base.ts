@@ -1,4 +1,5 @@
 import { Config } from '../config/types.js'
+import { t } from '../locales/index.js'
 
 export interface ReviewInput {
   prompt: string
@@ -19,8 +20,6 @@ export abstract class BaseLLMProvider implements LLMProvider {
   abstract review(input: ReviewInput): Promise<string>
 
   protected buildUserPrompt(diff: string): string {
-    return (
-      '请根据以下 git diff 进行代码审查，输出问题清单与改进建议，必要时给出补丁示例：\n\n' + diff
-    )
+    return t('prompt.userTemplate', { diff })
   }
 }

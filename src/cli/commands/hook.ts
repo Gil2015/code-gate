@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import tty from 'node:tty'
 import readline from 'node:readline'
 import { runReviewFlow } from '../../core/review.js'
+import { loadConfig } from '../../config/index.js'
+import { setLanguage, t } from '../../locales/index.js'
 import { intro, outro, confirm as clackConfirm, spinner, isCancel, cancel } from '@clack/prompts'
 import picocolors from 'picocolors'
 
@@ -133,58 +135,64 @@ function printBox(title: string, body: string) {
 }
 
 export async function runHook(force = false) {
+  // Load config first to set language
+  const cfg = await loadConfig()
+  if (cfg.language) {
+    setLanguage(cfg.language)
+  }
+
   const canPrompt = isInteractive() || fs.existsSync('/dev/tty')
   if (!canPrompt && !force) {
-    process.stdout.write('code-gate: non-interactive environment, skipping review\n')
+    process.stdout.write(t('cli.nonInteractive') + '\n')
     process.exit(0)
     return
   }
 
   console.clear()
-  intro(picocolors.bgBlue(picocolors.white(' Code Gate AI Review ')))
+  intro(picocolors.bgBlue(picocolors.white(t('cli.welcome'))))
 
-  const shouldReview = await safeConfirm('需要进行本次提交的代码 Review 吗？')
+  const shouldReview = await safeConfirm(t('cli.confirmReview'))
 
   if (shouldReview === CANCEL_SYMBOL || isCancel(shouldReview)) {
-    cancel('操作已取消')
+    cancel(t('cli.opCancelled'))
     process.exit(0)
   }
 
   if (!shouldReview) {
-    outro('已跳过 AI 审查')
+    outro(t('cli.reviewSkipped'))
     process.exit(0)
   }
 
   const s = spinner()
-  s.start('正在初始化 AI 审查...')
+  s.start(t('cli.initReview'))
 
   let previewUrl = ''
 
   const ok = await runReviewFlow({
     onStart: (total) => {
-      s.message(`准备审查 ${total} 个文件...`)
+      s.message(t('cli.preparingReview', { total }))
     },
     onProgress: (file, idx, total) => {
-      s.message(`正在分析 [${idx}/${total}] ${file}`)
+      s.message(t('cli.analyzing', { idx, total, file }))
     },
     onServerReady: (url) => {
       previewUrl = url
     }
   })
 
-  s.stop('AI 审查任务已提交')
+  s.stop(t('cli.taskSubmitted'))
 
   if (previewUrl) {
-    printBox('预览地址', previewUrl)
+    printBox(t('cli.previewUrl'), previewUrl)
   }
 
-  const shouldCommit = await safeConfirm('Review 已完成，是否继续提交？')
+  const shouldCommit = await safeConfirm(t('cli.confirmCommit'))
 
   if (shouldCommit === CANCEL_SYMBOL || isCancel(shouldCommit) || !shouldCommit) {
-    cancel('已取消提交')
+    cancel(t('cli.commitCancelled'))
     process.exit(1)
   }
 
-  outro(picocolors.green('提交确认，继续执行...'))
+  outro(picocolors.green(t('cli.commitConfirmed')))
   process.exit(0)
 }

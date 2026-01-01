@@ -93,7 +93,8 @@ export default {
     maxFiles: 100
   },
   reviewMode: 'files',
-  prompt: '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
+  language: 'en',
+  prompt: 'As a senior code review engineer, review this change from the perspectives of security, performance, code style, and test coverage. Point out issues and suggestions for improvement, and provide necessary example patches.',
   output: {
      dir: '.review-logs'
    }
@@ -117,20 +118,20 @@ async function checkAndAddToGitignore(cwd: string) {
   
   if (toAdd.length === 0) return
 
-  log.info(picocolors.yellow('检测到以下文件建议添加到 .gitignore:'))
+  log.info(picocolors.yellow('Detected the following files suggested to be added to .gitignore:'))
   for (const item of toAdd) {
     console.log(picocolors.dim(`  - ${item}`))
   }
 
   const shouldIgnore = await confirm({
-    message: '是否将上述文件添加到 .gitignore 配置中？',
+    message: 'Add these files to .gitignore?',
     initialValue: true
   })
 
   if (shouldIgnore === true) {
     const append = (content.endsWith('\n') || content === '') ? '' : '\n'
     fs.appendFileSync(gitignorePath, `${append}${toAdd.join('\n')}\n`, 'utf8')
-    log.success(picocolors.green('已更新 .gitignore'))
+    log.success(picocolors.green('Updated .gitignore'))
   }
 }
 

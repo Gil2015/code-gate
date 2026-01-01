@@ -4,6 +4,7 @@ import createDOMPurify from 'dompurify'
 import hljs from 'highlight.js'
 import { parse, html as d2hHtml } from 'diff2html'
 import { getAssets, CUSTOM_CSS, CLIENT_SCRIPT, LOGO_BASE64, GITHUB_SVG } from './assets.js'
+import { t } from '../../locales/index.js'
 
 // Setup JSDOM for DOMPurify
 const window = new JSDOM('').window
@@ -47,7 +48,7 @@ export function renderReviewItem(item: { file: string; review: string; diff: str
   const diffHtml = (d2hHtml as any)(json, { showFiles: false, matching: 'lines' })
   const reviewHtml = item.review
     ? DOMPurify.sanitize(marked.parse(item.review) as string, { ADD_TAGS: ['span'], ADD_ATTR: ['class'] })
-    : '<div class="review-body empty">暂无审查内容</div>'
+    : `<div class="review-body empty">${t('ui.emptyReview')}</div>`
   return {
     file: item.file,
     reviewHtml,
@@ -96,11 +97,11 @@ export function renderHTMLTabs(
 <div class="pane" data-idx="${i}">
   <div class="split">
     <div class="panel">
-      <div class="panel-title">AI Review</div>
+      <div class="panel-title">${t('ui.panelAI')}</div>
       <div class="review-body">${f.reviewHtml}</div>
     </div>
     <div class="panel">
-      <div class="panel-title">Diff</div>
+      <div class="panel-title">${t('ui.panelDiff')}</div>
       <div class="diff-body">${f.diffHtml}</div>
     </div>
   </div>
@@ -109,12 +110,12 @@ export function renderHTMLTabs(
 
   let statusBadge = ''
   if (!meta?.aiInvoked) {
-    statusBadge = `<span class="badge red">AI: 未参与</span>`
+    statusBadge = `<span class="badge red">${t('ui.statusPending')}</span>`
   } else if (meta?.aiInvoked && !meta?.aiSucceeded) {
-    statusBadge = `<span class="badge red">AI: 尝试失败</span>`
+    statusBadge = `<span class="badge red">${t('ui.statusFailed')}</span>`
   } else {
     // 静态页面生成时，肯定是“审核完毕”
-    statusBadge = `<span class="badge green">AI: 审核完毕</span>`
+    statusBadge = `<span class="badge green">${t('ui.statusDone')}</span>`
   }
 
   const badge = meta
@@ -128,7 +129,7 @@ export function renderHTMLTabs(
 
   const header = `<div class="header-row">
     <img src="${LOGO_BASE64}" class="logo" alt="Code Gate Logo" />
-    <h1>Code Review</h1>
+    <h1>${t('ui.title')}</h1>
     ${meta?.subtitle ? `<div class="subtitle">${escapeHtml(meta.subtitle)}</div>` : ''}
   </div>
   <div class="top-right-area">
@@ -150,7 +151,7 @@ tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.idx)));
 if(tabs.length > 0) activate(0);
 `
 
-  return getBaseTemplate('Code Gate Review', `${header}${badge}<div class="tabs">${tabs}</div><div class="panes">${panes}</div>`, '', script)
+  return getBaseTemplate(t('ui.title'), `${header}${badge}<div class="tabs">${tabs}</div><div class="panes">${panes}</div>`, '', script)
 }
 
 export function renderHTMLLive(
@@ -177,11 +178,11 @@ export function renderHTMLLive(
   // 初始调用时 aiInvoked 可能还没被设置为 true（取决于调用时机），但只要进了 live 页面，就是为了看 AI 结果。
   
   if (meta?.aiInvoked && meta?.status && meta.status.includes('失败')) {
-     statusBadge = `<span class="badge red">AI: 尝试失败</span>`
+     statusBadge = `<span class="badge red">${t('ui.statusFailed')}</span>`
   } else if (meta?.aiInvoked === false && meta?.status && meta.status.includes('失败')) {
-     statusBadge = `<span class="badge red">AI: 未参与</span>`
+     statusBadge = `<span class="badge red">${t('ui.statusPending')}</span>`
   } else {
-     statusBadge = `<span class="badge blue" id="ai-status">AI: 正在审核剩余文件...</span>`
+     statusBadge = `<span class="badge blue" id="ai-status">${t('ui.statusProcessing')}</span>`
   }
   
   const badge = meta
@@ -195,7 +196,7 @@ export function renderHTMLLive(
 
   const header = `<div class="header-row">
     <img src="${LOGO_BASE64}" class="logo" alt="Code Gate Logo" />
-    <h1>Code Review</h1>
+    <h1>${t('ui.title')}</h1>
     ${meta?.subtitle ? `<div class="subtitle">${escapeHtml(meta.subtitle)}</div>` : ''}
   </div>
   <div class="top-right-area">
@@ -214,6 +215,13 @@ export function renderHTMLLive(
 `
 
   const script = `
+const I18N = {
+  statusDone: "${t('ui.statusDone')}",
+  emptyReview: "${t('ui.emptyReview')}",
+  panelAI: "${t('ui.panelAI')}",
+  panelDiff: "${t('ui.panelDiff')}"
+};
+
 const route = '/review/${id}/status';
 function _decodeB64Json(b){ try { return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch(e){ return []; } }
 const initial = _decodeB64Json('${initialB64}');
@@ -242,18 +250,18 @@ function addItem(item){
   const p = document.createElement('div');
   p.className = 'pane';
   
-  const reviewHtml = item.review ? DOMPurify.sanitize(marked.parse(item.review)) : '<div class="review-body empty">暂无审查内容</div>';
+  const reviewHtml = item.review ? DOMPurify.sanitize(marked.parse(item.review)) : '<div class="review-body empty">' + I18N.emptyReview + '</div>';
   const parsed = window.Diff2Html.parse(item.diff, {inputFormat:'diff'});
   const diffHtml = window.Diff2Html.html(parsed, { showFiles:false, matching:'lines' });
   
   p.innerHTML = \`
   <div class="split">
     <div class="panel">
-      <div class="panel-title">AI Review</div>
+      <div class="panel-title">\${I18N.panelAI}</div>
       <div class="review-body">\${reviewHtml}</div>
     </div>
     <div class="panel">
-      <div class="panel-title">Diff</div>
+      <div class="panel-title">\${I18N.panelDiff}</div>
       <div class="diff-body">\${diffHtml}</div>
     </div>
   </div>\`;
@@ -280,7 +288,7 @@ async function poll(){
     if(!res.ok) {
       const n = document.getElementById('ai-status');
       if(n && known.size > 0) {
-        n.textContent = 'AI: 审核完毕';
+        n.textContent = I18N.statusDone;
         n.className = 'badge green';
       }
       return;
@@ -291,7 +299,7 @@ async function poll(){
     if(data.done) {
       const n = document.getElementById('ai-status');
       if(n) {
-        n.textContent = 'AI: 审核完毕';
+        n.textContent = I18N.statusDone;
         n.className = 'badge green';
       }
     } else {
@@ -306,5 +314,5 @@ try { initial.forEach(addItem); } catch(e){}
 poll();
 `
 
-  return getBaseTemplate('Code Gate Review', `${header}${badge}<div class="tabs"></div><div class="panes"></div>`, head, script)
+  return getBaseTemplate(t('ui.title'), `${header}${badge}<div class="tabs"></div><div class="panes"></div>`, head, script)
 }

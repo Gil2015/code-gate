@@ -1,4 +1,5 @@
 import { loadConfig } from '../config/index.js'
+import { setLanguage } from '../locales/index.js'
 import { getStagedFiles, getStagedDiff, filterFiles, getStagedDiffForFile, getBranchName, getDiffStats, getCommitMessage } from './git.js'
 import { createLLMProvider } from '../llm/index.js'
 import { renderHTMLLive, renderHTMLTabs } from '../ui/render/html.js'
@@ -13,6 +14,9 @@ export interface ReviewFlowOptions {
 
 export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boolean> {
   const cfg = await loadConfig()
+  if (cfg.language) {
+    setLanguage(cfg.language)
+  }
   const provider = createLLMProvider(cfg)
   const providerName = cfg.provider
   const mode = (cfg.reviewMode || 'files') as 'summary' | 'files' | 'both'
