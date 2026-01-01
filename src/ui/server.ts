@@ -52,7 +52,7 @@ export async function serveReview(
 
 export function saveOutput(cfg: Config, id: string, html: string) {
   try {
-    const outDir = (cfg.output?.dir && cfg.output.dir.trim()) || '.code-gate'
+    const outDir = (cfg.output?.dir && cfg.output.dir.trim()) || '.review-logs'
     const p = path.join(process.cwd(), outDir)
     fs.mkdirSync(p, { recursive: true })
     const fp = path.join(p, `review-${id}.html`)

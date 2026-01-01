@@ -30,7 +30,6 @@
     "build:watch": "tsc -w -p tsconfig.json",
     "clean": "rimraf dist",
     "dev": "node --enable-source-maps dist/cli.js",
-    "setup": "node --enable-source-maps dist/commands/setup.js",
     "hook": "node --enable-source-maps dist/commands/hook.js",
     "prepare": "npm run build"
   },

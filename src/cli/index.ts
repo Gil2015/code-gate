@@ -1,5 +1,4 @@
 import { Command } from 'commander'
-import { runSetup } from './commands/setup.js'
 import { runHook } from './commands/hook.js'
 import { runInit } from './commands/init.js'
 
@@ -10,18 +9,11 @@ export async function run() {
   program
     .command('init')
     .description('Initialize integration and generate config')
-    .option('-m, --method <method>', 'init method: git|husky|simple', 'git')
+    .option('-m, --method <method>', 'init method: git|husky', 'git')
     .option('-f, --force', 'force overwrite/append')
     .option('--no-config', 'do not generate config file')
     .action(async (opts) => {
       await runInit(opts.method as string, !!opts.config, !!opts.force)
-    })
-
-  program
-    .command('setup')
-    .description('Install git hook integration')
-    .action(async () => {
-      await runSetup()
     })
 
   program

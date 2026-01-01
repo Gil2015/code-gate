@@ -1,6 +1,6 @@
 # code-gate
 
-AI 助力的提交时代码 Review 工具，支持本地 Ollama 或 DeepSeek API，审查 `git commit` 的 `staged diff`，并以 GitHub Diff 风格在本地页面展示结果。
+AI 助力的提交时代码 Review 工具，支持本地 Ollama 或云端 AI 服务（DeepSeek, OpenAI, Anthropic, Aliyun Qwen, Volcengine Doubao, Zhipu GLM 等），审查 `git commit` 的 `staged diff`，并以 GitHub Diff 风格在本地页面展示结果。
 
 ## 安装
 - `npm i -D code-gate`
@@ -9,11 +9,6 @@ AI 助力的提交时代码 Review 工具，支持本地 Ollama 或 DeepSeek API
 - 推荐使用 `init` 命令，选择初始化方式并自动生成配置文件：
   - 原生 Git Hooks：`npx code-gate init -m git`
   - Husky：`npx code-gate init -m husky`
-  - simple-git-hooks：`npx code-gate init -m simple`
-  - 跳过配置文件生成：`npx code-gate init --no-config`
-- 仍支持旧方式：
-  - 原生 Git Hooks 快速安装：`npx code-gate setup`
-  - 该命令会创建 `.githooks/pre-commit` 并设置 `core.hooksPath`
 
 ## 手动初始化（不覆盖现有钩子）
 - Husky：
@@ -27,74 +22,101 @@ AI 助力的提交时代码 Review 工具，支持本地 Ollama 或 DeepSeek API
   - 设置 `core.hooksPath`：
     - `git config core.hooksPath .githooks`
 - 配置文件生成：
-  - 在项目根新建 `code-gate.config.json`（可从下文示例复制并按需调整）
-  - 如使用 DeepSeek，请在环境变量设置 `DEEPSEEK_API_KEY`，或在配置文件中直接指定 `apiKey`（建议加入 `.gitignore`）。
+  - 在项目根新建 `.codegate.js`（可从下文示例复制并按需调整）
+  - 如使用云端 API，请在环境变量设置对应的 KEY，或在配置文件中直接指定 `apiKey`（建议加入 `.gitignore`）。
 
 ## 命令
-- `npx code-gate init` 交互式初始化（可选择 git/husky/simple，自动生成配置文件，并提示是否添加配置至 .gitignore）
-- `npx code-gate setup` 快速安装原生 Git Hook
-- `npx code-gate hook` 在 Hook 中执行交互式 Review
-
-## 本地开发（link 调试）
-- 在 `code-gate` 仓库：
-  - `npm install`
-  - `npm run build:watch`
-  - `npm link`
-- 在目标项目：
-  - `npm link code-gate`
-  - `npx code-gate init -m git`（或 `husky`/`simple`）
-  - `git add` + `git commit` 时触发审查流程
+- `npx code-gate init` 交互式初始化（可选择 git/husky，自动生成配置文件，并提示是否添加配置至 .gitignore）
+- `npx code-gate hook` 在 Hook 中执行交互式 Review（通常由 commit 操作自动触发，无需手动运行）
 
 ## 配置文件
-- 推荐使用 `.codegate.js`（支持注释与更灵活的写法），兼容旧的 `code-gate.config.json/.yaml`、`.code-gaterc.{json,yaml}`。
-- 示例（`.codegate.js`）：
+- 仅支持 `.codegate.js` 格式。
+- 示例：
 ```js
-// provider: 选择使用的 AI 审查引擎，可选值: 'ollama' | 'deepseek'
-// providerOptions: 各 Provider 的配置集合（选填）
-//   - deepseek: { baseURL, apiKey, apiKeyEnv, model }
-//   - ollama: { baseURL, model }
-//   - openai: { baseURL, apiKey, apiKeyEnv, model }
-//   - anthropic: { baseURL, apiKey, apiKeyEnv, model }
-//   - gemini: { baseURL, apiKey, apiKeyEnv, model }
-//   - cohere: { baseURL, apiKey, apiKeyEnv, model }
-//   - mistral: { baseURL, apiKey, apiKeyEnv, model }
-//   - azureOpenAI: { endpoint, apiKey, apiKeyEnv, deployment, apiVersion }
-//   - aliyun: { baseURL, apiKey, apiKeyEnv, model }
-//   - volcengine: { baseURL, apiKey, apiKeyEnv, model }
-//   - zhipu: { baseURL, apiKey, apiKeyEnv, model }
-//   注：apiKey 可在配置文件中直接填写，或通过 apiKeyEnv 指定的环境变量读取（优先级：环境变量 > 配置文件）
-// fileTypes: 需要审查的文件类型扩展名列表
-// 并发：providerOptions.<provider>.concurrencyFiles 控制按文件的并发审查（默认 DeepSeek=4、Ollama=1，最大 8）
-// ui: 页面与交互设置
-//   - openBrowser: 是否自动打开浏览器
-//   - port: 预览服务端口
-// limits: 限制项
-//   - maxDiffLines: 最大 diff 行数
-//   - maxFiles: 最大审查文件数
-// prompt: 通用提示词
-// 行为：reviewMode 审查模式：'summary' | 'files' | 'both'（默认 'files'；'both' 时汇总最后执行）
-// output: 输出目录配置
-//   - dir: 本地输出目录
 export default {
-  provider: 'deepseek',
+  provider: 'ollama',
   providerOptions: {
-    deepseek: { baseURL: 'https://api.deepseek.com', apiKeyEnv: 'DEEPSEEK_API_KEY', model: 'deepseek-chat', concurrencyFiles: 4, request: { retries: 1, backoffMs: 300 } },
-    ollama: { baseURL: 'http://localhost:11434', model: 'qwen3:8b', concurrencyFiles: 1, request: { timeout: 15000, retries: 1, backoffMs: 300 } }
+    ollama: {
+      baseURL: 'http://localhost:11434',
+      model: 'qwen2.5-coder',
+      concurrencyFiles: 1
+    },
+    deepseek: {
+      baseURL: 'https://api.deepseek.com',
+      apiKeyEnv: 'DEEPSEEK_API_KEY',
+      model: 'deepseek-chat',
+      concurrencyFiles: 4
+    }
     // openai: { baseURL: 'https://api.openai.com/v1', apiKeyEnv: 'OPENAI_API_KEY', model: 'gpt-4o-mini' },
     // anthropic: { baseURL: 'https://api.anthropic.com', apiKeyEnv: 'ANTHROPIC_API_KEY', model: 'claude-3-5-sonnet' },
-    // azureOpenAI: { endpoint: 'https://your-endpoint.openai.azure.com', apiKeyEnv: 'AZURE_OPENAI_KEY', deployment: 'gpt-4o-mini', apiVersion: '2024-08-01-preview' }
+    // azureOpenAI: { endpoint: 'https://your-endpoint.openai.azure.com', apiKeyEnv: 'AZURE_OPENAI_KEY', deployment: 'gpt-4o-mini', apiVersion: '2024-08-01-preview' },
     // aliyun: { baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1', apiKeyEnv: 'DASHSCOPE_API_KEY', model: 'qwen-plus' },
     // volcengine: { baseURL: 'https://ark.cn-beijing.volces.com/api/v3', apiKeyEnv: 'VOLCENGINE_API_KEY', model: 'doubao-pro-32k' },
     // zhipu: { baseURL: 'https://open.bigmodel.cn/api/paas/v4', apiKeyEnv: 'ZHIPU_API_KEY', model: 'glm-4' }
   },
-  fileTypes: ['ts', 'tsx', 'js', 'jsx', 'json', 'md', 'py', 'go', 'rs'],
-  ui: { openBrowser: true, port: 5175 },
-  limits: { maxDiffLines: 10000, maxFiles: 100 },
+  fileTypes: [],
+  ui: {
+    openBrowser: true,
+    port: 5175
+  },
+  limits: {
+    maxDiffLines: 10000,
+    maxFiles: 100
+  },
   reviewMode: 'files',
   prompt: '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
-  output: { dir: '.code-gate' }
-}
-```
+  output: {
+     dir: '.review-logs'
+   }
+ }
+ ```
+
+### 参数说明
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `provider` | `string` | `'ollama'` | 选择使用的 AI 审查引擎。可选值: `'ollama'`, `'deepseek'`, `'openai'`, `'anthropic'`, `'aliyun'`, `'volcengine'`, `'zhipu'` 等 |
+| `providerOptions` | `object` | `{}` | 各 Provider 的具体配置集合（见下表） |
+| `fileTypes` | `string[]` | `[]` | 需要审查的文件类型扩展名列表。若为空数组或未配置，则审查所有文件。 |
+| `ui.openBrowser` | `boolean` | `true` | 是否自动打开浏览器预览 |
+| `ui.port` | `number` | `5175` | 预览服务端口 |
+| `limits.maxDiffLines` | `number` | `10000` | 最大 diff 行数，超出限制可能导致审查不完整或消耗过多 Token |
+| `limits.maxFiles` | `number` | `100` | 最大审查文件数 |
+| `reviewMode` | `string` | `'files'` | 审查模式：`'summary'` (仅汇总), `'files'` (仅文件详情), `'both'` (两者都有) |
+| `prompt` | `string` | `...` | 发送给 AI 的通用系统提示词 |
+| `output.dir` | `string` | `'.review-logs'` | 本地生成报告和静态资源的输出目录 |
+
+### providerOptions 配置
+每个 Provider 可配置以下字段，支持 `request` 选项控制请求超时与重试。
+
+**关键参数说明：**
+- `baseURL`: API 基础地址（如 `https://api.deepseek.com` 或 `http://localhost:11434`）
+- `apiKey`: API 密钥（直接在配置中指定，不推荐提交到仓库）
+- `apiKeyEnv`: 存储 API 密钥的环境变量名称（推荐方式，如 `DEEPSEEK_API_KEY`）
+- `model`: 使用的模型名称（如 `deepseek-chat`, `qwen2.5-coder`）
+- `concurrencyFiles`: 并发审查的文件数量（建议云端 API 设置 4-8，本地模型设置 1）
+- `request`: 高级请求配置（见下表“高级配置”）
+
+| Provider | 可配置参数 |
+| :--- | :--- |
+| **deepseek** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `concurrencyFiles`, `request` |
+| **ollama** | `baseURL`, `model`, `concurrencyFiles`, `request` |
+| **openai** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `request` |
+| **anthropic** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `request` |
+| **aliyun** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `request` |
+| **volcengine** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `request` |
+| **zhipu** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `request` |
+| **azureOpenAI** | `endpoint`, `apiKey`, `apiKeyEnv`, `deployment`, `apiVersion`, `request` |
+
+#### 高级配置 (request)
+在 `providerOptions.<provider>.request` 中配置，用于控制请求行为：
+
+| 参数 | 类型 | 默认值 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `timeout` | `number` | `undefined` | 请求超时时间（毫秒）。Ollama 默认建议设大一些（如 15000+） |
+| `retries` | `number` | `0` | 请求失败重试次数 |
+| `backoffMs` | `number` | `300` | 重试间隔时间（毫秒） |
+
+> **注意**：`concurrencyFiles` 控制并发审查的文件数（默认 DeepSeek=4, Ollama=1, 其他=4）。
 
 ## 使用流程
 - 运行 `git commit` 时会询问是否进行 Review：
@@ -107,19 +129,22 @@ export default {
 
 ## 故障排查
 - 页面只有 diff、没有 AI 审查内容：
-  - DeepSeek：确保设置了环境变量 `DEEPSEEK_API_KEY`，并且 `provider` 为 `deepseek`；可在 shell 中 `export DEEPSEEK_API_KEY="your_key"`
+  - 确保环境变量或 Config 中配置了正确的 API KEY。
   - Ollama：确保本地 Ollama 正在运行（默认 `http://localhost:11434`），并且模型已安装；例如 `ollama list` 查看，`ollama pull qwen2.5-coder`
-  - 可在 `code-gate.config.json` 中切换 `provider`，调整 `prompt` 与 `ui.port`
+  - 可在配置文件中切换 `provider`，调整 `prompt` 与 `ui.port`
   - 出错时页面顶部会显示原因与解决建议
 
-## DeepSeek 集成
+## 服务商 API 使用说明（以 DeepSeek 为例）
 - 使用 OpenAI 兼容接口 `https://api.deepseek.com`，需在环境变量设置密钥：`DEEPSEEK_API_KEY`。
   - 参考文档：https://api-docs.deepseek.com/
+- 其他服务商（如 Aliyun, Zhipu, Volcengine）通常也提供 OpenAI 兼容接口，配置 `baseURL` 和对应的 `apiKeyEnv` 即可。
 
 ## Ollama 集成
 - 通过本地 HTTP 接口调用，不内置安装；需用户自行安装与启动 Ollama。
+  - 安装说明：[Ollama GitHub](https://github.com/ollama/ollama)
   - 默认地址：`http://localhost:11434`
 
 ## 注意
 - 不会将密钥写入仓库；配置建议走环境变量。
 - 大 Diff 会消耗模型 token，可通过 `limits` 控制。
+
