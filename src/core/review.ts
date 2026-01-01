@@ -1,5 +1,5 @@
 import { loadConfig } from '../config/index.js'
-import { getStagedFiles, getStagedDiff, filterFiles, getStagedDiffForFile } from './git.js'
+import { getStagedFiles, getStagedDiff, filterFiles, getStagedDiffForFile, getBranchName, getDiffStats, getCommitMessage } from './git.js'
 import { createLLMProvider } from '../llm/index.js'
 import { renderHTMLLive, renderHTMLTabs } from '../ui/render/html.js'
 import { serveReview, saveOutput, triggerOpen } from '../ui/server.js'
@@ -58,14 +58,32 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   const concurrency = Math.max(1, Math.min(8, cfg.providerOptions?.[providerName]?.concurrencyFiles || 1))
   
   const items: Array<{ file: string; review: string; diff: string; done?: boolean }> = []
-  const id = Date.now().toString(36)
+  
+  // Generate ID with timestamp format: YYYYMMDD-HHmmss (Local Time)
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  const seconds = String(now.getSeconds()).padStart(2, '0')
+  const id = `${year}${month}${day}-${hours}${minutes}${seconds}`
+  
+  const formattedTime = now.toLocaleString()
+  const branchName = getBranchName()
+  const commitMsg = getCommitMessage()
+  const diffStats = getDiffStats()
+  
+  // Prefer commit message, fallback to diff stats
+  const info = commitMsg || diffStats
+  const subtitle = `Branch: ${branchName}${info ? ` | ${info}` : ''}`
 
   if (mode === 'summary') {
     const s = await runSummary()
     items.push({ file: 'Summary', review: s, diff, done: true })
     const html = renderHTMLLive(
       id,
-      { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status },
+      { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status, datetime: formattedTime, subtitle },
       [{ file: 'Summary', review: s, diff }]
     )
     const url = await serveReview(cfg, html, id, () => ({ files: items, done: true }))
@@ -75,13 +93,15 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
       aiSucceeded,
       provider: providerName,
       model: modelUsed,
-      status
+      status,
+      datetime: formattedTime,
+      subtitle
     })
     saveOutput(cfg, id, finalHtml)
     return false
   }
 
-  const html = renderHTMLLive(id, { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status }, [])
+  const html = renderHTMLLive(id, { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status, datetime: formattedTime, subtitle }, [])
   const previewUrl = await serveReview(cfg, html, id, () => {
     const completed = items.filter((it) => it.done)
     const expected = list.length + (mode === 'both' ? 1 : 0)
@@ -136,7 +156,9 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
       aiSucceeded,
       provider: providerName,
       model: modelUsed,
-      status
+      status,
+      datetime: formattedTime,
+      subtitle
     })
     saveOutput(cfg, id, finalHtml)
   } catch {}

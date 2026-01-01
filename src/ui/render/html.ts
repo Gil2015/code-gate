@@ -71,7 +71,6 @@ ${extraHead}
 </head>
 <body>
 <div class="container">
-<h1>Code Review</h1>
 ${body}
 </div>
 <script>
@@ -84,7 +83,7 @@ ${extraScript}
 
 export function renderHTMLTabs(
   files: Array<{ file: string; review: string; diff: string }>,
-  meta?: { aiInvoked?: boolean; aiSucceeded?: boolean; provider?: string; model?: string; status?: string }
+  meta?: { aiInvoked?: boolean; aiSucceeded?: boolean; provider?: string; model?: string; status?: string; datetime?: string; subtitle?: string }
 ): string {
   const renderedFiles = files.map(renderReviewItem)
   
@@ -127,6 +126,13 @@ export function renderHTMLTabs(
 </div>`
     : ''
 
+  const header = `<div class="header-row">
+    <h1>Code Review</h1>
+    ${meta?.subtitle ? `<div class="subtitle">${escapeHtml(meta.subtitle)}</div>` : ''}
+  </div>
+  ${meta?.datetime ? `<div class="timestamp">${escapeHtml(meta.datetime)}</div>` : ''}
+  `
+
   const script = `
 const tabs = document.querySelectorAll('.tab');
 const panes = document.querySelectorAll('.pane');
@@ -138,12 +144,12 @@ tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.idx)));
 if(tabs.length > 0) activate(0);
 `
 
-  return getBaseTemplate('Code Gate Review', `${badge}<div class="tabs">${tabs}</div><div class="panes">${panes}</div>`, '', script)
+  return getBaseTemplate('Code Gate Review', `${header}${badge}<div class="tabs">${tabs}</div><div class="panes">${panes}</div>`, '', script)
 }
 
 export function renderHTMLLive(
   id: string,
-  meta?: { aiInvoked?: boolean; aiSucceeded?: boolean; provider?: string; model?: string; status?: string },
+  meta?: { aiInvoked?: boolean; aiSucceeded?: boolean; provider?: string; model?: string; status?: string; datetime?: string; subtitle?: string },
   initial?: Array<{ file: string; review: string; diff: string }>
 ): string {
   // Logic for live template... similar structure but uses polling script
@@ -180,6 +186,13 @@ export function renderHTMLLive(
   ${meta.status ? `<div class="status">${escapeHtml(meta.status)}</div>` : ''}
 </div>`
     : ''
+
+  const header = `<div class="header-row">
+    <h1>Code Review</h1>
+    ${meta?.subtitle ? `<div class="subtitle">${escapeHtml(meta.subtitle)}</div>` : ''}
+  </div>
+  ${meta?.datetime ? `<div class="timestamp">${escapeHtml(meta.datetime)}</div>` : ''}
+  `
 
   const head = `
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -281,5 +294,5 @@ try { initial.forEach(addItem); } catch(e){}
 poll();
 `
 
-  return getBaseTemplate('Code Gate Review', `${badge}<div class="tabs"></div><div class="panes"></div>`, head, script)
+  return getBaseTemplate('Code Gate Review', `${header}${badge}<div class="tabs"></div><div class="panes"></div>`, head, script)
 }

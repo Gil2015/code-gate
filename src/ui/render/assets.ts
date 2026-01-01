@@ -41,10 +41,10 @@ export const CUSTOM_CSS = `
 html,body{height:100%;}
 body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;overflow:hidden}
 .container{width:100%;max-width:100%;margin:0 auto;padding:16px;height:100%;display:flex;flex-direction:column}
-.tabs{display:flex;gap:8px;overflow-x:auto;border-bottom:1px solid #d0d7de;flex:0 0 auto;scrollbar-width:thin}
-.tab{flex:0 0 auto;background:none;border:none;border-bottom:3px solid transparent;padding:8px 16px;font-size:14px;color:#57606a;cursor:pointer;transition:color 0.2s;white-space:nowrap}
-.tab:hover{color:#24292f;border-bottom-color:#d0d7de}
-.tab.active{color:#24292f;border-bottom-color:#0969da}
+.tabs{display:flex;gap:4px;overflow-x:auto;box-shadow:inset 0 -1px 0 #d0d7de;flex:0 0 auto;scrollbar-width:thin;padding-bottom:0}
+.tab{flex:0 0 auto;background:none;border:1px solid #eaeef2;border-bottom:1px solid transparent;padding:8px 16px;font-size:14px;color:#57606a;cursor:pointer;transition:all 0.2s;white-space:nowrap;border-top-left-radius:6px;border-top-right-radius:6px;margin-bottom:0}
+.tab:hover{color:#24292f;background:#eaeef2}
+.tab.active{color:#24292f;background:#fff;border-color:#d0d7de;border-bottom:1px solid #0969da;box-shadow:inset 0 -1px 0 #0969da}
 .panes{flex:1;overflow:hidden;position:relative}
 .pane{display:none;height:100%;padding-top:12px}
 .pane.active{display:block}
@@ -52,10 +52,11 @@ body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetic
 .panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;flex:1 1 50%;min-width:0;max-width:50%;height:100%}
 .panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa;flex:0 0 auto}
 .review-body{padding:16px;overflow:auto;flex:1;font-size:14px;line-height:1.5;color:#24292f}
-.review-body h1,.review-body h2,.review-body h3{margin-top:24px;margin-bottom:16px;font-weight:600;line-height:1.25}
+.review-body h1,.review-body h2,.review-body h3,.review-body h4{margin-top:24px;margin-bottom:16px;font-weight:600;line-height:1.25}
 .review-body h1{font-size:2em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
 .review-body h2{font-size:1.5em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}
 .review-body h3{font-size:1.25em}
+.review-body h4{font-size:1em}
 .review-body p{margin-top:0;margin-bottom:16px}
 .review-body blockquote{margin:0 0 16px;padding:0 1em;color:#57606a;border-left:.25em solid #d0d7de}
 .review-body ul,.review-body ol{margin-top:0;margin-bottom:16px;padding-left:2em}
@@ -72,4 +73,8 @@ body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetic
 .status{background:#fff8c5;border:1px solid #d0d7de;border-radius:6px;padding:8px 12px;font-size:12px;color:#4b4b00}
 .notice{margin:8px 0;color:#57606a}
 .hljs{background:#f6f8fa;border-radius:6px;font-family:ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;font-size:12px;padding:12px}
+.header-row{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid #d0d7de;padding-bottom:.3em;margin-top:0;margin-bottom:16px}
+.header-row h1{font-size:2em;margin:0;border-bottom:none;padding-bottom:0}
+.subtitle{font-size:14px;color:#57606a;margin:0}
+.timestamp{position:absolute;top:30px;right:24px;font-size:12px;color:#57606a;background:#f6f8fa;padding:4px 8px;border-radius:6px;border:1px solid #d0d7de}
 `
