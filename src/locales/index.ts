@@ -1,16 +1,26 @@
 import { Translation } from './types.js'
 import { zhCN } from './zh-CN.js'
 import { en } from './en.js'
+import { ja } from './ja.js'
+import { ko } from './ko.js'
+import { de } from './de.js'
+import { fr } from './fr.js'
 
-let currentLang: 'zh-CN' | 'en' = 'zh-CN'
-const locales: Record<string, Translation> = {
+export type SupportedLanguage = 'zh-CN' | 'en' | 'ja' | 'ko' | 'de' | 'fr'
+
+let currentLang: SupportedLanguage = 'zh-CN'
+const locales: Record<SupportedLanguage, Translation> = {
   'zh-CN': zhCN,
-  'en': en
+  'en': en,
+  'ja': ja,
+  'ko': ko,
+  'de': de,
+  'fr': fr
 }
 
 export function setLanguage(lang: string) {
-  if (lang === 'en' || lang === 'zh-CN') {
-    currentLang = lang
+  if (lang in locales) {
+    currentLang = lang as SupportedLanguage
   }
 }
 

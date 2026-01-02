@@ -83,6 +83,7 @@ export default {
 | `limits.maxDiffLines` | `number` | `10000` | 最大 diff 行数，超出限制可能导致审查不完整或消耗过多 Token |
 | `limits.maxFiles` | `number` | `100` | 最大审查文件数 |
 | `reviewMode` | `string` | `'files'` | 审查模式：`'summary'` (仅汇总), `'files'` (仅文件详情), `'both'` (两者都有) |
+| `language` | `string` | `'en'` | 界面与 Prompt 语言。可选值：`'en'`, `'zh-CN'`, `'ja'`, `'ko'`, `'de'`, `'fr'` |
 | `prompt` | `string` | `...` | 发送给 AI 的通用系统提示词 |
 | `output.dir` | `string` | `'.review-logs'` | 本地生成报告和静态资源的输出目录 |
 

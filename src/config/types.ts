@@ -52,7 +52,7 @@ export interface Config {
   }
   reviewMode?: 'summary' | 'files' | 'both'
   prompt?: string
-  language?: 'zh-CN' | 'en'
+  language?: 'zh-CN' | 'en' | 'ja' | 'ko' | 'de' | 'fr'
   output?: {
     dir?: string
   }
