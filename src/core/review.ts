@@ -1,5 +1,5 @@
 import { loadConfig } from '../config/index.js'
-import { setLanguage } from '../locales/index.js'
+import { setLanguage, t } from '../locales/index.js'
 import { getStagedFiles, getStagedDiff, filterFiles, getStagedDiffForFile, getBranchName, getDiffStats, getCommitMessage } from './git.js'
 import { createLLMProvider } from '../llm/index.js'
 import { renderHTMLLive, renderHTMLTabs } from '../ui/render/html.js'
@@ -22,7 +22,7 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   const mode = (cfg.reviewMode || 'files') as 'summary' | 'files' | 'both'
   const modelUsed = cfg.providerOptions?.[providerName]?.model || 'unknown'
 
-  const files = filterFiles(getStagedFiles(), cfg.fileTypes)
+  const files = filterFiles(getStagedFiles(), cfg.fileTypes, cfg.exclude)
   if (files.length === 0) {
     // info('code-gate: 没有可审查的文件')
     return true
@@ -118,7 +118,15 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   let completedCount = 0
 
   async function runTask(f: string) {
-    const fdiff = getStagedDiffForFile(f)
+    let fdiff = getStagedDiffForFile(f)
+    
+    // Check for max diff lines
+    const maxDiffLines = cfg.limits?.maxDiffLines || 10000
+    const lines = fdiff.split('\n')
+    if (lines.length > maxDiffLines) {
+      fdiff = lines.slice(0, maxDiffLines).join('\n') + t('cli.diffTruncated', { lines: lines.length })
+    }
+
     let frev = ''
     try {
       aiInvoked = true

@@ -84,6 +84,7 @@ export default {
     // zhipu: { baseURL: 'https://open.bigmodel.cn/api/paas/v4', apiKeyEnv: 'ZHIPU_API_KEY', model: 'glm-4' }
   },
   fileTypes: [],
+  exclude: ['**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml'],
   ui: {
     openBrowser: true,
     port: 5175

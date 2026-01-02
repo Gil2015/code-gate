@@ -76,7 +76,8 @@ export default {
 | :--- | :--- | :--- | :--- |
 | `provider` | `string` | `'ollama'` | 选择使用的 AI 审查引擎。可选值: `'ollama'`, `'deepseek'`, `'openai'`, `'anthropic'`, `'aliyun'`, `'volcengine'`, `'zhipu'` 等 |
 | `providerOptions` | `object` | `{}` | 各 Provider 的具体配置集合（见下表） |
-| `fileTypes` | `string[]` | `[]` | 需要审查的文件类型扩展名列表。若为空数组或未配置，则审查所有文件。 |
+| `fileTypes` | `string[]` | `[]` | 需要审查的文件类型扩展名列表（白名单）。若为空数组或未配置，则审查所有文件。 |
+| `exclude` | `string[]` | `['**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml']` | 不需要审查的文件或目录列表（黑名单），支持 glob 模式匹配（如 `node_modules/**`）。优先级高于 `fileTypes`。 |
 | `ui.openBrowser` | `boolean` | `true` | 是否自动打开浏览器预览 |
 | `ui.port` | `number` | `5175` | 预览服务端口 |
 | `limits.maxDiffLines` | `number` | `10000` | 最大 diff 行数，超出限制可能导致审查不完整或消耗过多 Token |
@@ -123,28 +124,12 @@ export default {
   - 选择否：正常提交。
   - 选择是：抓取 `staged diff` 调用 AI 审查，生成本地页面并打印预览 URL，再询问是否继续提交。
   - 非交互环境会自动跳过。
-  - 如需在非交互环境强制执行，可在 `.husky/pre-commit` 中使用：`npx code-gate hook -f`
   - 页面顶部会显示 AI 状态（是否参与、Provider、Model、错误信息）
-  - 默认按文件 Tab 展示：每个文件一个 Tab，Tabs 超出视野时横向滚动，每个文件顶部展示该文件的审查内容
+
+> **ps**: 如需在非交互环境强制执行，可在 `pre-commit` 中使用：`npx code-gate hook -f`
 
 ## 故障排查
 - 页面只有 diff、没有 AI 审查内容：
-  - 确保环境变量或 Config 中配置了正确的 API KEY。
-  - Ollama：确保本地 Ollama 正在运行（默认 `http://localhost:11434`），并且模型已安装；例如 `ollama list` 查看，`ollama pull qwen2.5-coder`
-  - 可在配置文件中切换 `provider`，调整 `prompt` 与 `ui.port`
-  - 出错时页面顶部会显示原因与解决建议
-
-## 服务商 API 使用说明（以 DeepSeek 为例）
-- 使用 OpenAI 兼容接口 `https://api.deepseek.com`，需在环境变量设置密钥：`DEEPSEEK_API_KEY`。
-  - 参考文档：https://api-docs.deepseek.com/
-- 其他服务商（如 Aliyun, Zhipu, Volcengine）通常也提供 OpenAI 兼容接口，配置 `baseURL` 和对应的 `apiKeyEnv` 即可。
-
-## Ollama 集成
-- 通过本地 HTTP 接口调用，不内置安装；需用户自行安装与启动 Ollama。
-  - 安装说明：[Ollama GitHub](https://github.com/ollama/ollama)
-  - 默认地址：`http://localhost:11434`
-
-## 注意
-- 不会将密钥写入仓库；配置建议走环境变量。
-- 大 Diff 会消耗模型 token，可通过 `limits` 控制。
+  - 如果provider选择的是第三方服务商，确保环境变量或providerOptions里配置正确。
+  - 如果provider选择的是Ollama，确保本地 Ollama 正在运行（默认 `http://localhost:11434`），并且模型已安装；例如 `ollama list` 查看，`ollama pull qwen2.5-coder`
 

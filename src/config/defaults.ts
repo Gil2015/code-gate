@@ -16,6 +16,7 @@ export const defaultConfig: Config = {
     }
   },
   fileTypes: [],
+  exclude: ['**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml'],
   ui: {
     openBrowser: true,
     port: 5175

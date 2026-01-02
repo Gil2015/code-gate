@@ -15,6 +15,7 @@ export const en: Translation = {
     confirmCommit: 'Review completed. Continue to commit?',
     commitCancelled: 'Commit cancelled',
     commitConfirmed: 'Commit confirmed, proceeding...',
+    diffTruncated: '\n...(Diff truncated due to length, total lines: {lines})',
   },
   ui: {
     title: 'Code Review',

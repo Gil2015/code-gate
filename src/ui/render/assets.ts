@@ -54,7 +54,7 @@ body{font-family: ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetic
 .pane.active{display:block}
 .split{display:flex;gap:12px;align-items:stretch;height:100%}
 .panel{border:1px solid #d0d7de;border-radius:6px;background:#fff;display:flex;flex-direction:column;flex:1 1 50%;min-width:0;max-width:50%;height:100%}
-.panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa;flex:0 0 auto}
+.panel-title{font-weight:600;padding:8px 12px;border-bottom:1px solid #d0d7de;background:#f6f8fa;flex:0 0 auto;border-top-left-radius: 6px;border-top-right-radius: 6px;}
 .review-body{padding:16px;overflow:auto;flex:1;font-size:14px;line-height:1.5;color:#24292f}
 .review-body h1,.review-body h2,.review-body h3,.review-body h4{margin-top:24px;margin-bottom:16px;font-weight:600;line-height:1.25}
 .review-body h1{font-size:2em;border-bottom:1px solid #d0d7de;padding-bottom:.3em}

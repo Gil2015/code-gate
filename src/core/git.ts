@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
+import micromatch from 'micromatch'
 
 function runGit(args: string[]) {
   const res = spawnSync('git', args, { encoding: 'utf8' })
@@ -24,14 +25,25 @@ export function getStagedDiffForFile(file: string): string {
   return runGit(['diff', '--staged', '--', file])
 }
 
-export function filterFiles(files: string[], fileTypes?: string[]): string[] {
-  if (!fileTypes || fileTypes.length === 0) return files
-  const exts = new Set(fileTypes.map((t) => t.replace(/^\./, '').toLowerCase()))
-  return files.filter((f) => {
-    const m = f.split('.').pop()
-    if (!m) return false
-    return exts.has(m.toLowerCase())
-  })
+export function filterFiles(files: string[], fileTypes?: string[], exclude?: string[]): string[] {
+  let list = files
+
+  // 1. Whitelist (fileTypes)
+  if (fileTypes && fileTypes.length > 0) {
+    const exts = new Set(fileTypes.map((t) => t.replace(/^\./, '').toLowerCase()))
+    list = list.filter((f) => {
+      const m = f.split('.').pop()
+      if (!m) return false
+      return exts.has(m.toLowerCase())
+    })
+  }
+
+  // 2. Blacklist (exclude)
+  if (exclude && exclude.length > 0) {
+    list = list.filter((f) => !micromatch.isMatch(f, exclude))
+  }
+
+  return list
 }
 
 export function getBranchName(): string {

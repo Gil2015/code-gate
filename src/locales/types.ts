@@ -13,6 +13,7 @@ export interface Translation {
     confirmCommit: string
     commitCancelled: string
     commitConfirmed: string
+    diffTruncated: string // with {lines} placeholder
   }
   ui: {
     title: string

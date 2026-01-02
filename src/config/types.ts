@@ -41,6 +41,7 @@ export interface Config {
     zhipu?: ProviderConfig
   }
   fileTypes?: string[]
+  exclude?: string[]
   ui?: {
     openBrowser?: boolean
     port: number

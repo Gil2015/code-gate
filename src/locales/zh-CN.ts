@@ -15,6 +15,7 @@ export const zhCN: Translation = {
     confirmCommit: 'Review 已完成，是否继续提交？',
     commitCancelled: '已取消提交',
     commitConfirmed: '提交确认，继续执行...',
+    diffTruncated: '\n...(Diff 过长已截断，总行数: {lines})',
   },
   ui: {
     title: 'Code Review',
