@@ -12,18 +12,21 @@ AI 助力的提交时代码 Review 工具，支持本地 Ollama 或云端 AI 服
 
 ## 手动初始化（不覆盖现有钩子）
 - Husky：
-  - 编辑 `.husky/pre-commit`，在原有内容后追加一行：
-    - `npx code-gate hook`
+  - 编辑 `.husky/pre-commit`，在原有内容后追加：
+    ```bash
+    ./node_modules/.bin/code-gate-hook
+    ```
+    > 提示：如果希望支持全局安装模式，也可使用 `npx code-gate-hook`
   - 确认 `git config core.hooksPath` 输出 `.husky`
 - 原生 Git Hooks：
-  - 在项目根创建 `.githooks/pre-commit`，内容示例：
-    - `#!/usr/bin/env sh`
-    - `npx code-gate hook`
+  - 在项目根创建 `.githooks/pre-commit`，内容：
+    ```bash
+    #!/bin/sh
+    ./node_modules/.bin/code-gate-hook
+    ```
   - 设置 `core.hooksPath`：
     - `git config core.hooksPath .githooks`
-- 配置文件生成：
-  - 在项目根新建 `.codegate.js`（可从下文示例复制并按需调整）
-  - 如使用云端 API，请在环境变量设置对应的 KEY，或在配置文件中直接指定 `apiKey`（建议加入 `.gitignore`）。
+
 
 ## 命令
 - `npx code-gate init` 交互式初始化（可选择 git/husky，自动生成配置文件，并提示是否添加配置至 .gitignore）

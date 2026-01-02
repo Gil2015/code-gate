@@ -14,11 +14,12 @@ function isGitRepo(cwd: string) {
   return res.status === 0
 }
 
+const HOOK_SCRIPT = `./node_modules/.bin/code-gate-hook`
+
 function initGitHooks(cwd: string) {
   const hooksDir = path.join(cwd, '.githooks')
   const preCommit = path.join(hooksDir, 'pre-commit')
-  const hookLine = `npx code-gate hook`
-  ensurePreCommitContains(preCommit, hookLine, 'git')
+  ensurePreCommitContains(preCommit, HOOK_SCRIPT, 'git')
   spawnSync('git', ['config', 'core.hooksPath', '.githooks'], { cwd, stdio: 'inherit' })
   process.stdout.write('code-gate: initialized with native git hooks (.githooks)\n')
 }
@@ -52,8 +53,7 @@ function initHusky(cwd: string) {
     spawnSync('npx', ['husky', 'init'], { cwd, stdio: 'inherit' })
   }
   const preCommit = path.join(huskyDir, 'pre-commit')
-  const hookLine = `npx code-gate hook`
-  ensurePreCommitContains(preCommit, hookLine, 'husky')
+  ensurePreCommitContains(preCommit, HOOK_SCRIPT, 'husky')
   spawnSync('git', ['config', 'core.hooksPath', '.husky'], { cwd, stdio: 'inherit' })
   process.stdout.write('code-gate: initialized with husky (.husky)\n')
 }

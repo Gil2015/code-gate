@@ -40,6 +40,19 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   let aiSucceeded = false
   let status = ''
 
+  // 1. Pre-check for Ollama connectivity if selected
+  if (providerName === 'ollama') {
+    try {
+      const baseURL = cfg.providerOptions?.ollama?.baseURL || 'http://localhost:11434'
+      const checkRes = await fetch(baseURL).catch(() => null)
+      if (!checkRes) {
+        warn(t('cli.ollamaCheckFailed'))
+        // Don't block, but user should know AI might fail
+        status = t('cli.ollamaCheckFailed')
+      }
+    } catch {}
+  }
+
   if (opts.onStart) opts.onStart(files.length)
 
   async function runSummary(): Promise<string> {

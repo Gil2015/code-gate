@@ -16,6 +16,7 @@ export const zhCN: Translation = {
     commitCancelled: '已取消提交',
     commitConfirmed: '提交确认，继续执行...',
     diffTruncated: '\n...(Diff 过长已截断，总行数: {lines})',
+    ollamaCheckFailed: '警告: 检测到 Ollama 服务未启动或无法连接，AI Review 可能会失败。',
   },
   ui: {
     title: 'Code Review',

@@ -14,6 +14,7 @@ export interface Translation {
     commitCancelled: string
     commitConfirmed: string
     diffTruncated: string // with {lines} placeholder
+    ollamaCheckFailed: string
   }
   ui: {
     title: string

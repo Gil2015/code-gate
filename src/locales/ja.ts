@@ -16,6 +16,7 @@ export const ja: Translation = {
     commitCancelled: 'コミットをキャンセルしました',
     commitConfirmed: 'コミットを確認しました。続行します...',
     diffTruncated: '\n...(長さ制限のためDiffが切り詰められました。総行数: {lines})',
+    ollamaCheckFailed: '警告: Ollama サービスが検出されないか、接続できません。AI レビューが失敗する可能性があります。',
   },
   ui: {
     title: 'Code Review',

@@ -4,12 +4,14 @@
   "description": "AI-assisted code review at git commit using local Ollama or DeepSeek API, with GitHub-style diff UI.",
   "type": "module",
   "bin": {
-    "code-gate": "bin/code-gate.js"
+    "code-gate": "bin/code-gate.js",
+    "code-gate-hook": "scripts/hook.sh"
   },
   "main": "dist/index.js",
   "files": [
     "dist",
     "bin",
+    "scripts",
     "README.md"
   ],
   "keywords": [
