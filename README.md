@@ -1,41 +1,79 @@
-# code-gate
+<div align="center">
+  <img src="assets/logo.png" alt="Code Gate Logo" width="120" />
+</div>
 
-AI 助力的提交时代码 Review 工具，支持本地 Ollama 或云端 AI 服务（DeepSeek, OpenAI, Anthropic, Aliyun Qwen, Volcengine Doubao, Zhipu GLM 等），审查 `git commit` 的 `staged diff`，并以 GitHub Diff 风格在本地页面展示结果。
+[English](./README.md) | [简体中文](./README_ZH.md)
 
-## 安装
-- `npm i -D code-gate`
+# Code Gate
 
-## 初始化与集成
-- 推荐使用 `init` 命令，选择初始化方式并自动生成配置文件：
-  - 原生 Git Hooks：`npx code-gate init -m git`
-  - Husky：`npx code-gate init -m husky`
+**Your Lightweight Local AI Code Review Assistant**
 
-## 手动初始化（不覆盖现有钩子）
-- Husky：
-  - 编辑 `.husky/pre-commit`，在原有内容后追加：
-    ```bash
-    ./node_modules/.bin/code-gate-hook
-    ```
-    > 提示：如果希望支持全局安装模式，也可使用 `npx code-gate-hook`
-  - 确认 `git config core.hooksPath` 输出 `.husky`
-- 原生 Git Hooks：
-  - 在项目根创建 `.githooks/pre-commit`，内容：
-    ```bash
-    #!/bin/sh
-    ./node_modules/.bin/code-gate-hook
-    ```
-  - 设置 `core.hooksPath`：
-    - `git config core.hooksPath .githooks`
+Code Gate is an intelligent code review tool seamlessly integrated into your Git workflow. When you run `git commit`, it automatically analyzes staged code changes, utilizing local LLMs (Ollama) or cloud AI services to provide instant feedback on code quality, security suggestions, and optimization plans.
 
+## ✨ Features
 
-## 命令
-- `npx code-gate init` 交互式初始化（可选择 git/husky，自动生成配置文件，并提示是否添加配置至 .gitignore）
-- `npx code-gate hook` 在 Hook 中执行交互式 Review（通常由 commit 操作自动触发，无需手动运行）
+- **🔒 Privacy First**: Native support for Ollama local models. 
+- **☁️ Multi-Model Support**: Seamlessly integrates with DeepSeek, OpenAI, Anthropic, Aliyun Qwen, Doubao, and more.
+- **🌍 Multi-Language**: Built-in support for English, Chinese (Simplified & Traditional), Japanese, Korean, German, and French.
+- **⚡️ High Performance**: Intelligent concurrent processing for faster reviews across multiple files.
+- **🛠️ Highly Customizable**: Custom prompts, file filtering rules, and review strategies.
+- **📊 Visual Reports**: Generates intuitive HTML review reports with clear diffs and AI suggestions.
 
-## 配置文件
-- 仅支持 `.codegate.js` 格式。
-- 示例：
-```js
+## 🚀 Quick Start
+
+### 1. Installation
+
+Install `code-gate` as a development dependency:
+
+```bash
+npm i -D code-gate
+```
+
+### 2. Initialization
+
+We provide a one-click initialization command to configure Git Hooks.
+
+**Automatic Init (Recommended)**
+
+```bash
+# Interactive selection for Git Hooks or Husky
+npx code-gate init
+```
+
+You can also specify arguments if you prefer a specific hook manager:
+
+- **Native Git Hooks**: `npx code-gate init -m git`
+- **Husky**: `npx code-gate init -m husky`
+
+> After initialization, you can choose to add the generated config file to `.gitignore`.
+
+### 3. Usage
+
+Just commit your code as usual:
+
+```bash
+git add .
+git commit -m "feat: new feature"
+```
+
+Code Gate intercepts the commit:
+1. Analyzes code changes.
+   <img src="assets/step1.png" width="300" />
+2. Starts a local server and generates a review report.
+3. Automatically opens the report in your browser.
+   <img src="assets/step2.png" width="600" />
+4. You choose to **Confirm Commit** or **Cancel** in the terminal.
+   <img src="assets/step3.png" width="300" />
+
+---
+
+## ⚙️ Configuration
+
+The `code-gate.config.js` in your project root controls all behaviors.
+
+### Basic Configuration
+
+```javascript
 export default {
   provider: 'ollama',
   providerOptions: {
@@ -57,7 +95,8 @@ export default {
     // volcengine: { baseURL: 'https://ark.cn-beijing.volces.com/api/v3', apiKeyEnv: 'VOLCENGINE_API_KEY', model: 'doubao-pro-32k' },
     // zhipu: { baseURL: 'https://open.bigmodel.cn/api/paas/v4', apiKeyEnv: 'ZHIPU_API_KEY', model: 'glm-4' }
   },
-  fileTypes: [],
+  language: 'en',
+  fileTypes: ['ts', 'tsx', 'css'],
   ui: {
     openBrowser: true,
     port: 5175
@@ -66,42 +105,81 @@ export default {
     maxDiffLines: 10000,
     maxFiles: 100
   },
-  reviewMode: 'files',
-  prompt: '作为资深代码审查工程师，从安全、性能、代码风格与测试覆盖角度审查本次变更，指出问题与改进建议，并给出必要的示例补丁。',
+  prompt: 'as a senior code reviewer, please review the code changes and provide feedback on security, performance, code style, and test coverage. Highlight any issues or areas for improvement, and offer concrete suggestions with code examples if possible.',
   output: {
-     dir: '.review-logs'
-   }
- }
- ```
+    dir: '.review-logs'
+  },
+}
+```
 
-### 参数说明
-| 参数 | 类型 | 默认值 | 说明 |
+### API Key Configuration
+
+Choose the appropriate configuration scheme based on your project needs. Taking deepseek as an example.
+For security, avoid hardcoding API Keys in the config file.
+
+**Option A: Config File**
+
+Set in `.code-gate.js`:
+
+```javascript
+export default {
+  providerOptions: {
+    deepseek: {
+      // ...other config
+      apiKey: 'your-deepseek-api-key'
+    }
+  }
+}
+```
+
+**Option B: Git Hook Injection**
+
+Export temporarily in `.githooks/pre-commit` or `.husky/pre-commit`:
+
+```bash
+#!/bin/sh
+export DEEPSEEK_API_KEY=[your-deepseek-api-key]
+./node_modules/.bin/code-gate-hook
+```
+
+**Option C: Environment Variables (Recommended)**
+
+Set in your `.env` file or system environment:
+
+```bash
+export DEEPSEEK_API_KEY=[your-deepseek-api-key]
+```
+
+## 📖 Configuration Details
+
+| Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `provider` | `string` | `'ollama'` | 选择使用的 AI 审查引擎。可选值: `'ollama'`, `'deepseek'`, `'openai'`, `'anthropic'`, `'aliyun'`, `'volcengine'`, `'zhipu'` 等 |
-| `providerOptions` | `object` | `{}` | 各 Provider 的具体配置集合（见下表） |
-| `fileTypes` | `string[]` | `[]` | 需要审查的文件类型扩展名列表（白名单）。若为空数组或未配置，则审查所有文件。 |
-| `exclude` | `string[]` | `['**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml']` | 不需要审查的文件或目录列表（黑名单），支持 glob 模式匹配（如 `node_modules/**`）。优先级高于 `fileTypes`。 |
-| `ui.openBrowser` | `boolean` | `true` | 是否自动打开浏览器预览 |
-| `ui.port` | `number` | `5175` | 预览服务端口 |
-| `limits.maxDiffLines` | `number` | `10000` | 最大 diff 行数，超出限制可能导致审查不完整或消耗过多 Token |
-| `limits.maxFiles` | `number` | `100` | 最大审查文件数 |
-| `reviewMode` | `string` | `'files'` | 审查模式：`'summary'` (仅汇总), `'files'` (仅文件详情), `'both'` (两者都有) |
-| `language` | `string` | `'en'` | 界面与 Prompt 语言。可选值：`'en'`, `'zh-CN'`, `'ja'`, `'ko'`, `'de'`, `'fr'` |
-| `prompt` | `string` | `...` | 发送给 AI 的通用系统提示词 |
-| `output.dir` | `string` | `'.review-logs'` | 本地生成报告和静态资源的输出目录 |
+| `provider` | `string` | `'ollama'` | AI Provider. Supports `ollama`, `deepseek`, `openai`, `anthropic`, `aliyun`, `volcengine`, `zhipu`, etc. |
+| `providerOptions` | `object` | `{}` | Specific configurations for each Provider (see table below) |
+| `fileTypes` | `string[]` | `[]` | List of file extensions to review (whitelist). Reviews all files if empty or undefined. |
+| `exclude` | `string[]` | `['**/package-lock.json', '**/yarn.lock', '**/pnpm-lock.yaml']` | List of files or directories to ignore (blacklist), supports glob patterns (e.g., `node_modules/**`). Higher priority than `fileTypes`. |
+| `ui.openBrowser` | `boolean` | `true` | Auto-open browser for report preview |
+| `ui.port` | `number` | `5175` | Preview server port |
+| `limits.maxDiffLines` | `number` | `10000` | Max diff lines per review. Exceeding may cause incomplete review or excessive token usage. |
+| `limits.maxFiles` | `number` | `100` | Max number of files to review |
+| `reviewMode` | `string` | `'files'` | Review Mode: `'summary'` (summary only), `'files'` (file details only), `'both'` (both) |
+| `language` | `string` | `'en'` | UI & Prompt Language. Options: `'en'`, `'zh-CN'`, `'zh-TW'`, `'ja'`, `'ko'`, `'de'`, `'fr'` |
+| `prompt` | `string` | `...` | Universal system prompt sent to AI |
+| `output.dir` | `string` | `'.review-logs'` | Output directory for local reports and static assets |
 
-### providerOptions 配置
-每个 Provider 可配置以下字段，支持 `request` 选项控制请求超时与重试。
+### providerOptions Configuration
 
-**关键参数说明：**
-- `baseURL`: API 基础地址（如 `https://api.deepseek.com` 或 `http://localhost:11434`）
-- `apiKey`: API 密钥（直接在配置中指定，不推荐提交到仓库）
-- `apiKeyEnv`: 存储 API 密钥的环境变量名称（推荐方式，如 `DEEPSEEK_API_KEY`）
-- `model`: 使用的模型名称（如 `deepseek-chat`, `qwen2.5-coder`）
-- `concurrencyFiles`: 并发审查的文件数量（建议云端 API 设置 4-8，本地模型设置 1）
-- `request`: 高级请求配置（见下表“高级配置”）
+Each Provider supports the following fields, with `request` option for timeout and retry control.
 
-| Provider | 可配置参数 |
+**Key Parameters:**
+- `baseURL`: API base URL (e.g., `https://api.deepseek.com` or `http://localhost:11434`)
+- `apiKey`: API Key (specified directly in config, not recommended for committing)
+- `apiKeyEnv`: Environment variable name storing the API Key (Recommended, e.g., `DEEPSEEK_API_KEY`)
+- `model`: Model name to use (e.g., `deepseek-chat`, `qwen2.5-coder`)
+- `concurrencyFiles`: Number of concurrent file reviews (Recommended: Cloud API 4-8, Local Model 1)
+- `request`: Advanced request configuration (see "Advanced Configuration" below)
+
+| Provider | Configurable Parameters |
 | :--- | :--- |
 | **deepseek** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `concurrencyFiles`, `request` |
 | **ollama** | `baseURL`, `model`, `concurrencyFiles`, `request` |
@@ -112,28 +190,28 @@ export default {
 | **zhipu** | `baseURL`, `apiKey`, `apiKeyEnv`, `model`, `request` |
 | **azureOpenAI** | `endpoint`, `apiKey`, `apiKeyEnv`, `deployment`, `apiVersion`, `request` |
 
-#### 高级配置 (request)
-在 `providerOptions.<provider>.request` 中配置，用于控制请求行为：
+#### Advanced Configuration (request)
 
-| 参数 | 类型 | 默认值 | 说明 |
+Configure in `providerOptions.<provider>.request` to control request behavior:
+
+| Parameter | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
-| `timeout` | `number` | `undefined` | 请求超时时间（毫秒）。Ollama 默认建议设大一些（如 15000+） |
-| `retries` | `number` | `0` | 请求失败重试次数 |
-| `backoffMs` | `number` | `300` | 重试间隔时间（毫秒） |
+| `timeout` | `number` | `undefined` | Request timeout (ms). Recommended to set higher for Ollama (e.g., 15000+) |
+| `retries` | `number` | `0` | Number of retries on request failure |
+| `backoffMs` | `number` | `300` | Retry interval (ms) |
 
-> **注意**：`concurrencyFiles` 控制并发审查的文件数（默认 DeepSeek=4, Ollama=1, 其他=4）。
+> **Note**: `concurrencyFiles` controls the number of concurrent file reviews (Default: DeepSeek=4, Ollama=1, Others=4).
 
-## 使用流程
-- 运行 `git commit` 时会询问是否进行 Review：
-  - 选择否：正常提交。
-  - 选择是：抓取 `staged diff` 调用 AI 审查，生成本地页面并打印预览 URL，再询问是否继续提交。
-  - 非交互环境会自动跳过。
-  - 页面顶部会显示 AI 状态（是否参与、Provider、Model、错误信息）
+## ❓ FAQ
 
-> **ps**: 如需在非交互环境强制执行，可在 `pre-commit` 中使用：`npx code-gate hook -f`
+**Q: Report shows diffs but no AI suggestions?**
+- Check `provider` configuration.
+- If using Ollama, ensure local service is running (`ollama serve`) and model is pulled (`ollama pull qwen2.5-coder`).
+- If using Cloud API, check API Key validity and network connection.
 
-## 故障排查
-- 页面只有 diff、没有 AI 审查内容：
-  - 如果provider选择的是第三方服务商，确保环境变量或providerOptions里配置正确。
-  - 如果provider选择的是Ollama，确保本地 Ollama 正在运行（默认 `http://localhost:11434`），并且模型已安装；例如 `ollama list` 查看，`ollama pull qwen2.5-coder`
+**Q: How to skip review in CI/CD?**
+Code Gate detects non-interactive environments and skips automatically. To force skip, use `git commit --no-verify`.
 
+## 📄 License
+
+MIT

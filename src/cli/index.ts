@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { Command } from 'commander'
 import { runHook } from './commands/hook.js'
 import { runInit } from './commands/init.js'
@@ -9,7 +10,7 @@ export async function run() {
   program
     .command('init')
     .description('Initialize integration and generate config')
-    .option('-m, --method <method>', 'init method: git|husky', 'git')
+    .option('-m, --method <method>', 'init method: git|husky')
     .option('-f, --force', 'force overwrite/append')
     .option('--no-config', 'do not generate config file')
     .action(async (opts) => {

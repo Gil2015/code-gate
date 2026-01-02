@@ -1,7 +1,7 @@
 {
   "name": "code-gate",
-  "version": "0.1.0",
-  "description": "AI-assisted code review at git commit using local Ollama or DeepSeek API, with GitHub-style diff UI.",
+  "version": "1.0.0",
+  "description": "Intelligent Git commit guard and code reviewer. Supports local (Ollama) and cloud models (DeepSeek, OpenAI, Anthropic, etc.) with a rich CLI UI.",
   "type": "module",
   "bin": {
     "code-gate": "bin/code-gate.js",
@@ -12,7 +12,9 @@
     "dist",
     "bin",
     "scripts",
-    "README.md"
+    "README.md",
+    "README_ZH.md",
+    "LICENSE"
   ],
   "keywords": [
     "git",
@@ -22,10 +24,15 @@
     "Ollama",
     "diff2html"
   ],
+  "author": "Gil",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://example.com/your-repo-url.git"
+    "url": "https://github.com/Gil2015/code-gate.git"
+  },
+  "homepage": "https://github.com/Gil2015/code-gate#readme",
+  "bugs": {
+    "url": "https://github.com/Gil2015/code-gate/issues"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -43,6 +50,7 @@
     "commander": "^12.1.0",
     "diff2html": "^3.4.47",
     "dompurify": "^3.3.1",
+    "dotenv": "^17.2.3",
     "highlight.js": "^11.9.0",
     "jsdom": "^27.0.1",
     "marked": "^17.0.1",

@@ -5,8 +5,9 @@ import { ja } from './ja.js'
 import { ko } from './ko.js'
 import { de } from './de.js'
 import { fr } from './fr.js'
+import { zhTW } from './zh-TW.js'
 
-export type SupportedLanguage = 'zh-CN' | 'en' | 'ja' | 'ko' | 'de' | 'fr'
+export type SupportedLanguage = 'zh-CN' | 'en' | 'ja' | 'ko' | 'de' | 'fr' | 'zh-TW'
 
 let currentLang: SupportedLanguage = 'zh-CN'
 const locales: Record<SupportedLanguage, Translation> = {
@@ -15,7 +16,8 @@ const locales: Record<SupportedLanguage, Translation> = {
   'ja': ja,
   'ko': ko,
   'de': de,
-  'fr': fr
+  'fr': fr,
+  'zh-TW': zhTW
 }
 
 export function setLanguage(lang: string) {

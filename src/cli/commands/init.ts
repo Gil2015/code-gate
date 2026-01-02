@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
-import { confirm, intro, outro, log } from '@clack/prompts'
+import { confirm, intro, outro, log, select, isCancel, cancel } from '@clack/prompts'
 import picocolors from 'picocolors'
 
 function writeFileSafe(p: string, content: string) {
@@ -136,7 +136,7 @@ async function checkAndAddToGitignore(cwd: string) {
   }
 }
 
-export async function runInit(method: string, genConfig: boolean, force = false) {
+export async function runInit(method: string | undefined, genConfig: boolean, force = false) {
   const cwd = process.cwd()
   
   intro(picocolors.bgBlue(picocolors.white(' Code Gate Init ')))
@@ -146,6 +146,24 @@ export async function runInit(method: string, genConfig: boolean, force = false)
     process.exit(1)
     return
   }
+
+  if (!method) {
+    const selected = await select({
+      message: 'Select hook method:',
+      options: [
+        { value: 'git', label: 'Native Git Hooks', hint: 'recommended' },
+        { value: 'husky', label: 'Husky' }
+      ]
+    })
+
+    if (isCancel(selected)) {
+      cancel('Operation cancelled.')
+      process.exit(0)
+    }
+
+    method = selected as string
+  }
+
   if (method === 'husky') initHusky(cwd)
   else initGitHooks(cwd)
   if (genConfig) generateConfig(cwd, force)
