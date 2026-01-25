@@ -1,6 +1,6 @@
 import { loadConfig } from '../config/index.js'
 import { setLanguage, t } from '../locales/index.js'
-import { getStagedFiles, getStagedDiff, filterFiles, getStagedDiffForFile, getBranchName, getDiffStats, getCommitMessage } from './git.js'
+import { getStagedFiles, getStagedDiff, filterFiles, getStagedDiffForFile, getBranchName, getDiffStats, getCommitMessage, getCommitDiffForFile } from './git.js'
 import { createLLMProvider } from '../llm/index.js'
 import { renderHTMLLive, renderHTMLTabs } from '../ui/render/html.js'
 import { serveReview, saveOutput, triggerOpen } from '../ui/server.js'
@@ -10,6 +10,10 @@ export interface ReviewFlowOptions {
   onProgress?: (file: string, index: number, total: number) => void
   onServerReady?: (url: string) => void
   onStart?: (total: number) => void
+  customFiles?: string[]  // 允许传入自定义文件列表
+  customDiff?: string     // 允许传入自定义diff
+  customSubtitle?: string // 自定义副标题
+  customCommitHash?: string // 自定义commit hash，用于获取特定文件的diff
 }
 
 export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boolean> {
@@ -22,13 +26,53 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   const mode = (cfg.reviewMode || 'files') as 'summary' | 'files' | 'both'
   const modelUsed = cfg.providerOptions?.[providerName]?.model || 'unknown'
 
-  const files = filterFiles(getStagedFiles(), cfg.fileTypes, cfg.exclude)
+  // 如果提供了自定义文件列表，则使用它；否则使用暂存区的文件
+  const files = opts.customFiles || filterFiles(getStagedFiles(), cfg.fileTypes, cfg.exclude)
   if (files.length === 0) {
+    // 即使没有文件需要审查，也要生成一个空的报告
+    // Generate ID with timestamp format: YYYYMMDD-HHmmss (Local Time)
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = String(now.getMonth() + 1).padStart(2, '0')
+    const day = String(now.getDate()).padStart(2, '0')
+    const hours = String(now.getHours()).padStart(2, '0')
+    const minutes = String(now.getMinutes()).padStart(2, '0')
+    const seconds = String(now.getSeconds()).padStart(2, '0')
+    const id = `${year}${month}${day}-${hours}${minutes}${seconds}`
+
+    const formattedTime = now.toLocaleString()
+
+    // 如果提供了自定义副标题，则使用它；否则使用默认逻辑
+    let subtitle = opts.customSubtitle || '';
+    if (!subtitle) {
+      const branchName = getBranchName()
+      const commitMsg = getCommitMessage()
+      const diffStats = getDiffStats()
+
+      // Prefer commit message, fallback to diff stats
+      const info = commitMsg || diffStats
+      subtitle = `Branch: ${branchName}${info ? ` | ${info}` : ''}`
+    }
+
+    // 生成空的审查报告
+    const emptyHtml = await renderHTMLTabs([], {
+      aiInvoked: false,
+      aiSucceeded: false,
+      provider: cfg.provider,
+      model: cfg.providerOptions?.[cfg.provider]?.model || 'unknown',
+      status: 'No files to review',
+      datetime: formattedTime,
+      subtitle,
+      showLogo: cfg.ui?.showLogo
+    })
+    saveOutput(cfg, id, emptyHtml)
+
     // info('code-gate: 没有可审查的文件')
     return true
   }
 
-  let diff = getStagedDiff()
+  // 如果提供了自定义diff，则使用它；否则使用暂存区的diff
+  let diff = opts.customDiff || getStagedDiff()
   if (!diff) {
     // warn('code-gate: 未获取到 diff')
     return true
@@ -75,7 +119,7 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   const concurrency = Math.max(1, Math.min(8, cfg.providerOptions?.[providerName]?.concurrencyFiles || 1))
   
   const items: Array<{ file: string; review: string; diff: string; done?: boolean }> = []
-  
+
   // Generate ID with timestamp format: YYYYMMDD-HHmmss (Local Time)
   const now = new Date()
   const year = now.getFullYear()
@@ -85,15 +129,20 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   const minutes = String(now.getMinutes()).padStart(2, '0')
   const seconds = String(now.getSeconds()).padStart(2, '0')
   const id = `${year}${month}${day}-${hours}${minutes}${seconds}`
-  
+
   const formattedTime = now.toLocaleString()
-  const branchName = getBranchName()
-  const commitMsg = getCommitMessage()
-  const diffStats = getDiffStats()
-  
-  // Prefer commit message, fallback to diff stats
-  const info = commitMsg || diffStats
-  const subtitle = `Branch: ${branchName}${info ? ` | ${info}` : ''}`
+
+  // 如果提供了自定义副标题，则使用它；否则使用默认逻辑
+  let subtitle = opts.customSubtitle || '';
+  if (!subtitle) {
+    const branchName = getBranchName()
+    const commitMsg = getCommitMessage()
+    const diffStats = getDiffStats()
+
+    // Prefer commit message, fallback to diff stats
+    const info = commitMsg || diffStats
+    subtitle = `Branch: ${branchName}${info ? ` | ${info}` : ''}`
+  }
 
   if (mode === 'summary') {
     const s = await runSummary()
@@ -105,16 +154,20 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
     )
     const url = await serveReview(cfg, html, id, () => ({ files: items, done: true }))
     if (opts.onServerReady) opts.onServerReady(url)
-    const finalHtml = renderHTMLTabs(items, {
-      aiInvoked,
-      aiSucceeded,
-      provider: providerName,
-      model: modelUsed,
-      status,
-      datetime: formattedTime,
-      subtitle
-    })
-    saveOutput(cfg, id, finalHtml)
+    try {
+      const finalHtml = renderHTMLTabs(items, {
+        aiInvoked,
+        aiSucceeded,
+        provider: providerName,
+        model: modelUsed,
+        status,
+        datetime: formattedTime,
+        subtitle
+      })
+      saveOutput(cfg, id, finalHtml)
+    } catch (e) {
+      console.error('生成最终HTML时出错:', e);
+    }
     return false
   }
 
@@ -131,8 +184,11 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   let completedCount = 0
 
   async function runTask(f: string) {
-    let fdiff = getStagedDiffForFile(f)
-    
+    // 根据是否有自定义commit hash来决定使用哪种方式获取diff
+    let fdiff = opts.customCommitHash
+      ? getCommitDiffForFile(opts.customCommitHash, f)
+      : getStagedDiffForFile(f)
+
     // Check for max diff lines
     const maxDiffLines = cfg.limits?.maxDiffLines || 10000
     const lines = fdiff.split('\n')
@@ -187,7 +243,9 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
       showLogo: cfg.ui?.showLogo
     })
     saveOutput(cfg, id, finalHtml)
-  } catch {}
+  } catch (e) {
+    console.error('生成最终HTML时出错:', e);
+  }
 
   return false
 }

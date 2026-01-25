@@ -28,8 +28,8 @@ function expect(actual: any) {
   }
 }
 
-test('renders diff and review', () => {
-  const item = renderReviewItem({ file: 'a.txt', review: sampleReview, diff: sampleDiff })
+test('renders diff and review', async () => {
+  const item = await renderReviewItem({ file: 'a.txt', review: sampleReview, diff: sampleDiff })
   expect(item.reviewHtml).toContain('Looks good')
   expect(item.diffHtml).toContain('d2h-file-header')
 })

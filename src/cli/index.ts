@@ -2,6 +2,7 @@ import 'dotenv/config'
 import { Command } from 'commander'
 import { runHook } from './commands/hook.js'
 import { runInit } from './commands/init.js'
+import { runReviewCommit } from './commands/review-commit.js'
 
 export async function run() {
   const program = new Command()
@@ -23,6 +24,14 @@ export async function run() {
     .option('-f, --force', 'force review even when non-interactive', false)
     .action(async (opts) => {
       await runHook(!!opts.force)
+    })
+
+  program
+    .command('review-commit <commit-hash>')
+    .alias('rc')
+    .description('Review code changes from a specific commit')
+    .action(async (commitHash: string) => {
+      await runReviewCommit(commitHash)
     })
 
   program.parseAsync(process.argv)

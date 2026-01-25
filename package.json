@@ -39,7 +39,7 @@
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
     "clean": "rimraf dist",
-    "dev": "node --enable-source-maps dist/cli.js",
+    "dev": "node --enable-source-maps dist/cli/index.js",
     "hook": "node --enable-source-maps dist/commands/hook.js",
     "prepare": "npm run build"
   },
@@ -48,6 +48,7 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
+    "code-gate": "^1.0.5",
     "commander": "^12.1.0",
     "diff2html": "^3.4.47",
     "dompurify": "^3.3.1",

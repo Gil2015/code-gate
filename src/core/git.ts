@@ -63,13 +63,13 @@ function getPendingCommitMessage(): string | null {
       if (res.status !== 0) break
       const lines = res.stdout.trim().split('\n')
       if (lines.length < 2) break
-      
+
       const match = lines[1].trim().match(/^(\d+)\s+(.*)$/)
       if (!match) break
-      
+
       const ppid = parseInt(match[1], 10)
       const args = match[2]
-      
+
       if (/\bgit\s+commit\b/.test(args)) {
         // Found git commit command
         // Try to extract -m or --message
@@ -84,7 +84,7 @@ function getPendingCommitMessage(): string | null {
         }
         return '' // Found git commit but no message (interactive)
       }
-      
+
       if (ppid === 0) break
       pid = ppid
     }
@@ -119,4 +119,35 @@ export function getCommitMessage(): string {
 
   // 3. Do NOT fallback to HEAD commit message to avoid confusion
   return ''
+}
+
+// 新增函数：获取指定commit的文件列表
+export function getCommitFiles(commitHash: string): string[] {
+  const out = runGit(['diff-tree', '--no-commit-id', '--name-only', '-r', commitHash])
+  return out
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+}
+
+// 新增函数：获取指定commit的diff
+export function getCommitDiff(commitHash: string): string {
+  return runGit(['show', commitHash])
+}
+
+// 新增函数：获取指定commit与父提交之间的diff
+export function getCommitVsParentDiff(commitHash: string): string {
+  return runGit(['show', '--format=', commitHash])
+}
+
+// 新增函数：获取指定commit的详细信息（包括提交消息）
+export function getCommitInfo(commitHash: string): { hash: string; message: string; author: string; date: string } {
+  const info = runGit(['show', '--format=%H%n%s%n%an%n%ad', '--no-patch', commitHash]).trim()
+  const [hash, message, author, date] = info.split('\n')
+  return { hash, message, author, date }
+}
+
+// 新增函数：获取指定commit中特定文件的diff
+export function getCommitDiffForFile(commitHash: string, file: string): string {
+  return runGit(['show', commitHash, '--', file])
 }

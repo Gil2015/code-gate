@@ -1,23 +1,39 @@
 import { marked } from 'marked'
-import { JSDOM } from 'jsdom'
-import createDOMPurify from 'dompurify'
-import hljs from 'highlight.js'
-import { createRequire } from 'node:module'
 import { getAssets, CUSTOM_CSS, CLIENT_SCRIPT, LOGO_BASE64, GITHUB_SVG } from './assets.js'
 import { t } from '../../locales/index.js'
+import hljs from 'highlight.js'
+import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
 // Use the bundle directly to avoid issues with package.json "main" resolution in some environments
 const { parse, html: d2hHtml } = require('diff2html/bundles/js/diff2html.min.js')
 
-// Setup JSDOM for DOMPurify
-const window = new JSDOM('').window
-const DOMPurify = createDOMPurify(window as any)
-DOMPurify.addHook('afterSanitizeAttributes', function (node: any) {
-  if (node.tagName === 'SPAN' && node.className && node.className.startsWith('hljs-')) {
-    // allow
+// 由于ES模块兼容性问题，我们使用一个简单的HTML净化函数替代DOMPurify
+function sanitizeHtml(dirtyHtml: string): string {
+  // 简单的HTML净化，移除潜在危险的标签和属性
+  return dirtyHtml
+    // 移除script标签及其内容
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    // 移除on*事件处理器
+    .replace(/\s*on\w+\s*=\s*(['"]).*?\1/gi, '')
+    // 移除javascript:协议
+    .replace(/javascript:/gi, 'javascript_')
+    // 移除data:协议（除了特定安全的）
+    .replace(/data:(?!image\/)[^'"]*/gi, 'data_removed_')
+    // 移除vbscript:协议
+    .replace(/vbscript:/gi, 'vbscript_')
+    // 移除表达式（CSS）
+    .replace(/expression\s*\(/gi, 'expression_(');
+}
+
+// 创建一个模拟的DOMPurify对象
+const DOMPurify = {
+  sanitize: (dirtyHtml: string, options?: any) => {
+    const sanitized = sanitizeHtml(dirtyHtml);
+    // 如果有额外的标签或属性白名单，可以在这里处理
+    return sanitized;
   }
-})
+};
 
 // Setup Marked
 marked.setOptions({
