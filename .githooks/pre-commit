@@ -1,2 +1,2 @@
 #!/usr/bin/env sh
-./node_modules/.bin/code-gate-hook
+node ./bin/code-gate-hook.js

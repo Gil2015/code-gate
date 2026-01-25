@@ -16,18 +16,44 @@ export function getAssets(): { css: string; js: string } {
     // marked: Handle 'exports' restriction by resolving main and finding sibling UMD file
     const markedMainPath = require.resolve('marked')
     const markedPath = path.join(path.dirname(markedMainPath), 'marked.umd.js')
-    
-    const dompurifyPath = require.resolve('dompurify/dist/purify.min.js')
+
     const d2hJsPath = require.resolve('diff2html/bundles/js/diff2html.min.js')
-    
+
     // Read highlight.min.js from vendor directory (for offline syntax highlighting)
     const hljsPath = path.join(__dirname, '../../../vendor/highlight.min.js')
-    
+
     const markedJs = fs.readFileSync(markedPath, 'utf8')
-    const dompurifyJs = fs.readFileSync(dompurifyPath, 'utf8')
     const d2hJs = fs.readFileSync(d2hJsPath, 'utf8')
     const hljsJs = fs.readFileSync(hljsPath, 'utf8')
-    
+
+    // Create a simple DOMPurify-like function for client-side
+    const dompurifyJs = `
+      function sanitize(dirty, options) {
+        if (typeof dirty !== 'string') return '';
+
+        // Simple sanitization - remove dangerous elements
+        let clean = dirty
+          // Remove script tags and their content
+          .replace(/<script\\b[^<]*(?:(?!<\\/script>)<[^<]*)*<\\/script>/gi, '')
+          // Remove event handlers
+          .replace(/\\s*on\\w+\\s*=\\s*(['"]).*?\\1/gi, '')
+          // Remove javascript: protocol
+          .replace(/javascript:/gi, 'javascript_')
+          // Remove data: protocol (except images)
+          .replace(/data:(?!image\\/)[^'"]*/gi, 'data_removed_')
+          // Remove vbscript: protocol
+          .replace(/vbscript:/gi, 'vbscript_')
+          // Remove expressions
+          .replace(/expression\\s*\\(/gi, 'expression_(');
+
+        return clean;
+      }
+      var DOMPurify = { sanitize: sanitize };
+      if (typeof module !== 'undefined' && module.exports) {
+        module.exports = { sanitize: sanitize };
+      }
+    `;
+
     const d2hCss = fs.readFileSync(d2hCssPath, 'utf8')
     const hljsCss = fs.readFileSync(hljsCssPath, 'utf8')
 

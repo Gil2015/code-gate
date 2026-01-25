@@ -48,13 +48,10 @@
   },
   "dependencies": {
     "@clack/prompts": "^0.11.0",
-    "code-gate": "^1.0.5",
     "commander": "^12.1.0",
     "diff2html": "^3.4.47",
-    "dompurify": "^3.3.1",
     "dotenv": "^17.2.3",
     "highlight.js": "^11.9.0",
-    "jsdom": "^27.0.1",
     "marked": "^17.0.1",
     "micromatch": "^4.0.8",
     "openai": "^4.60.0",
@@ -62,8 +59,6 @@
     "yaml": "^2.6.0"
   },
   "devDependencies": {
-    "@types/dompurify": "^3.0.5",
-    "@types/jsdom": "^27.0.0",
     "@types/marked": "^5.0.2",
     "@types/micromatch": "^4.0.10",
     "@types/node": "^22.7.5",
