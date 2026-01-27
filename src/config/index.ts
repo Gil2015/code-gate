@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import yaml from 'yaml'
+import { createJiti } from 'jiti'
 import { Config } from './types.js'
 import { defaultConfig } from './defaults.js'
 
@@ -12,9 +13,11 @@ function findConfigFile(cwd: string): string | undefined {
     path.join(cwd, '.codegate.js'),
     path.join(cwd, '.codegate.cjs'),
     path.join(cwd, '.codegate.mjs'),
+    path.join(cwd, '.codegate.ts'),
     path.join(cwd, 'code-gate.config.js'),
     path.join(cwd, 'code-gate.config.cjs'),
     path.join(cwd, 'code-gate.config.mjs'),
+    path.join(cwd, 'code-gate.config.ts'),
     path.join(cwd, 'code-gate.config.json'),
     path.join(cwd, 'code-gate.config.yaml'),
     path.join(cwd, 'code-gate.config.yml'),
@@ -31,9 +34,9 @@ function findConfigFile(cwd: string): string | undefined {
 
 async function readFile(p: string): Promise<any> {
   const ext = path.extname(p).toLowerCase()
-  if (ext === '.js' || ext === '.cjs' || ext === '.mjs') {
-    const { pathToFileURL } = await import('node:url')
-    const mod = await import(pathToFileURL(p).href)
+  if (ext === '.js' || ext === '.cjs' || ext === '.mjs' || ext === '.ts') {
+    const jiti = createJiti(import.meta.url)
+    const mod = await jiti.import(p) as any
     return mod?.default ?? mod
   }
   const raw = fs.readFileSync(p, 'utf8')

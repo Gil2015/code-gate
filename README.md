@@ -92,6 +92,8 @@ Provide specific examples on how to fix the issues.`,
 }
 ```
 
+> Supported configuration formats include: `.codegate.js`, `.codegate.ts`, `code-gate.config.js`, `.code-gaterc`, `code-gate.config.yaml` etc. (supports js, ts, json, yaml extensions).
+
 ### Method 1: Zero-Install with npx
 
 No installation required. Review the latest commit (or a specific commit) directly:

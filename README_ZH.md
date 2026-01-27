@@ -91,6 +91,7 @@ export default {
 }
 ```
 
+> 配置文件支持多种格式，包括: `.codegate.js`, `.codegate.ts`, `code-gate.config.js`, `.code-gaterc`, `code-gate.config.yaml` 等 (支持 js, ts, json, yaml 扩展名)。
 
 
 ### 方式一：npx 零安装使用
