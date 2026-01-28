@@ -20,6 +20,26 @@ Code Gate 是一款无缝集成到 Git 工作流中的智能代码AI审查工具
   <img src="assets/review_cn.png" alt="Code Gate example" width="100%" />
 </div>
 
+## 目录
+
+- [✨ 核心特性](#-核心特性)
+- [🚀 快速开始](#-快速开始)
+  - [添加配置文件](#添加配置文件)
+  - [方式一：npx 零安装使用](#方式一npx-零安装使用)
+  - [方式二：npm 包管理集成](#方式二npm-包管理集成)
+  - [方式三：Git Hook 自动化审查](#方式三git-hook-自动化审查)
+- [📖 配置详解](#-配置详解)
+  - [providerOptions 配置](#provideroptions-配置)
+  - [API Key 配置方案](#api-key-配置方案)
+- [🤖 Agent 模式](#-agent-模式)
+  - [启用 Agent 模式](#启用-agent-模式)
+  - [支持的 Provider](#支持的-provider)
+  - [Agent 模式提示词示例](#agent-模式提示词示例)
+  - [agent可用工具](#agent可用工具)
+  - [工作原理](#工作原理)
+- [❓ 常见问题](#-常见问题)
+- [📄 License](#-license)
+
 ## ✨ 核心特性
 
 - **🔒 数据隐私优先**：原生支持 Ollama 本地模型。

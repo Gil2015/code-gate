@@ -20,6 +20,26 @@ Supports zero-config execution via npx, npm/yarn/pnpm package integration, and a
   <img src="assets/review.png" alt="Code Gate example" width="100%" />
 </div>
 
+## Table of Contents
+
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+  - [Add Configuration File](#add-configuration-file)
+  - [Method 1: Zero-Install with npx](#method-1-zero-install-with-npx)
+  - [Method 2: NPM Integration](#method-2-npm-integration)
+  - [Method 3: Automated Git Hook Review](#method-3-automated-git-hook-review)
+- [📖 Configuration Details](#-configuration-details)
+  - [providerOptions Configuration](#provideroptions-configuration)
+  - [API Key Configuration](#api-key-configuration)
+- [🤖 Agent Mode](#-agent-mode)
+  - [Enabling Agent Mode](#enabling-agent-mode)
+  - [Supported Providers](#supported-providers)
+  - [Agent Mode Prompt Example](#agent-mode-prompt-example)
+  - [Available Tools](#available-tools)
+  - [How It Works](#how-it-works)
+- [❓ FAQ](#-faq)
+- [📄 License](#-license)
+
 ## ✨ Features
 
 - **🔒 Privacy First**: Native support for Ollama local models.
