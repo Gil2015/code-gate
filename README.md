@@ -324,21 +324,6 @@ Currently, Agent mode is supported by:
 - **DeepSeek** (`deepseek-chat` and other models with function calling)
 - **Zhipu** (`glm-4` and other models with function calling)
 
-### Available Tools
-
-| Tool | Description | Use Case |
-|------|-------------|----------|
-| `read_file` | Read file contents with pagination | View complete source files, type definitions |
-| `search_content` | Search code with regex patterns | Find function definitions, method calls |
-| `list_directory` | List directory structure | Understand project organization |
-
-### How It Works
-
-1. AI receives the diff and list of changed files
-2. AI analyzes the changes and identifies areas needing more context
-3. AI uses tools to retrieve relevant code (e.g., type definitions, related functions)
-4. AI generates a comprehensive review based on full context
-5. Process repeats until AI has enough information or limits are reached
 
 ### Agent Mode Prompt Example
 
@@ -352,6 +337,7 @@ export default {
     maxIterations: 5,
     maxToolCalls: 10
   },
+  ..., // other options
   prompt: `You are a senior code reviewer with access to the full codebase context.
 
 Project Info:
@@ -390,7 +376,24 @@ Final recommendation on whether to merge`
 }
 ```
 
-> **Note**: Agent mode increases API token usage due to multi-turn conversations and tool results. Consider this when reviewing large changes.
+> **Note**: Agent mode increases API token usage due to multi-turn conversations and tool results. Consider this when reviewing large changes. To save tokens, the diff content is also merged and displayed.
+
+
+### Available Tools
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| `read_file` | Read file contents with pagination | View complete source files, type definitions |
+| `search_content` | Search code with regex patterns | Find function definitions, method calls |
+| `list_directory` | List directory structure | Understand project organization |
+
+### How It Works
+
+1. AI receives the diff and list of changed files
+2. AI analyzes the changes and identifies areas needing more context
+3. AI uses tools to retrieve relevant code (e.g., type definitions, related functions)
+4. AI generates a comprehensive review based on full context
+5. Process repeats until AI has enough information or limits are reached
 
 ---
 
