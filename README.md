@@ -6,7 +6,7 @@
 
 # Code Gate
 
-![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)
+[![Node Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen?style=for-the-badge)](https://nodejs.org/)
 [![GitHub release](https://img.shields.io/github/v/release/Gil2015/code-gate?style=for-the-badge)](https://github.com/Gil2015/code-gate/releases/latest)
 [![License](https://img.shields.io/github/license/Gil2015/code-gate?style=for-the-badge)](LICENSE)
 
