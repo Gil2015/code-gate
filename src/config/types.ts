@@ -25,6 +25,12 @@ export interface AzureOpenAIConfig extends ProviderConfig {
   apiVersion?: string
 }
 
+export interface AgentConfig {
+  enabled: boolean           // 是否启用 Agent 模式
+  maxIterations?: number     // 最大迭代次数，默认 5
+  maxToolCalls?: number      // 单次迭代最大工具调用数，默认 10
+}
+
 export interface Config {
   provider: Provider
   providerOptions?: {
@@ -57,4 +63,5 @@ export interface Config {
   output?: {
     dir?: string
   }
+  agent?: AgentConfig
 }

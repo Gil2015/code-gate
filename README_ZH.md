@@ -24,6 +24,7 @@ Code Gate 是一款无缝集成到 Git 工作流中的智能代码AI审查工具
 
 - **🔒 数据隐私优先**：原生支持 Ollama 本地模型。
 - **☁️ 多模型支持**：无缝对接 DeepSeek, OpenAI, Anthropic, 阿里云 Qwen, 豆包等主流 AI 服务。
+- **🤖 Agent 模式**：AI 可主动获取代码上下文（读取文件、搜索定义、浏览目录），实现更深入准确的代码审查。支持 DeepSeek 和智谱。
 - **🌍 多语言界面**：内置中（简/繁）、英、日、韩、德、法等多语言支持。
 - **⚡️ 高效并发**：智能并发处理多文件审查，提升 Review 速度。
 - **🛠️ 高度可定制**：支持自定义 Prompt、文件过滤规则及审查策略。
@@ -89,6 +90,12 @@ export default {
 提供具体的示例说明如何修复问题。`,
   output: {
     dir: '.review-logs'
+  },
+  // Agent 模式（可选）- 启用后 AI 可主动获取代码上下文
+  agent: {
+    enabled: false,      // 设为 true 启用 Agent 模式（仅支持 DeepSeek 和智谱）
+    maxIterations: 5,    // 最大迭代轮数
+    maxToolCalls: 10     // 每次审查最大工具调用次数
   }
 }
 ```
@@ -209,6 +216,9 @@ git commit -m "feat: new feature"
 | `language` | `string` | `'en'` | 界面与 Prompt 语言。可选值：`'en'`, `'zh-CN'`, `'zh-TW'`, `'ja'`, `'ko'`, `'de'`, `'fr'` |
 | `prompt` | `string` | `...` | 发送给 AI 的通用系统提示词 |
 | `output.dir` | `string` | `'.review-logs'` | 本地生成报告和静态资源的输出目录 |
+| `agent.enabled` | `boolean` | `false` | 启用 Agent 模式，获取更深入的上下文感知审查（仅支持 DeepSeek 和智谱） |
+| `agent.maxIterations` | `number` | `5` | Agent 获取上下文的最大迭代轮数 |
+| `agent.maxToolCalls` | `number` | `10` | 每次审查允许的最大工具调用次数 |
 
 ### providerOptions 配置
 每个 Provider 可配置以下字段，支持 `request` 选项控制请求超时与重试。
@@ -280,6 +290,112 @@ export DEEPSEEK_API_KEY=[your-deepseek-api-key]
 ```bash
 export DEEPSEEK_API_KEY=[your-deepseek-api-key]
 ```
+
+---
+
+## 🤖 Agent 模式
+
+Agent 模式允许 AI 在审查过程中主动获取代码上下文，从而提供更准确、更全面的反馈。与仅查看 diff 不同，AI 可以：
+
+- **读取完整文件**：了解变更的完整上下文
+- **搜索定义**：理解类型、接口和函数实现
+- **查找引用**：评估变更的影响范围
+- **浏览目录结构**：了解项目组织方式
+
+### 启用 Agent 模式
+
+在 `.codegate.js` 中添加 `agent` 配置：
+
+```javascript
+export default {
+  provider: 'deepseek',  // 或 'zhipu'
+  providerOptions: {
+    deepseek: {
+      apiKeyEnv: 'DEEPSEEK_API_KEY',
+      model: 'deepseek-chat'
+    }
+  },
+  agent: {
+    enabled: true,       // 启用 Agent 模式
+    maxIterations: 5,    // 最大上下文获取轮数
+    maxToolCalls: 10     // 最大工具调用次数
+  }
+}
+```
+
+### 支持的 Provider
+
+目前 Agent 模式支持以下 Provider：
+- **DeepSeek**（`deepseek-chat` 及其他支持函数调用的模型）
+- **智谱**（`glm-4` 及其他支持函数调用的模型）
+
+### 可用工具
+
+| 工具 | 描述 | 使用场景 |
+|------|------|----------|
+| `read_file` | 分页读取文件内容 | 查看完整源代码、类型定义 |
+| `search_content` | 使用正则表达式搜索代码 | 查找函数定义、方法调用 |
+| `list_directory` | 列出目录结构 | 了解项目组织方式 |
+
+### 工作原理
+
+1. AI 接收 diff 和变更文件列表
+2. AI 分析变更并识别需要更多上下文的区域
+3. AI 使用工具获取相关代码（如类型定义、关联函数）
+4. AI 基于完整上下文生成全面的审查报告
+5. 重复上述过程直到 AI 获取足够信息或达到限制
+
+### Agent 模式提示词示例
+
+使用 Agent 模式时，可以优化提示词以充分利用 AI 获取上下文的能力。以下是推荐的 Agent 模式提示词：
+
+```javascript
+export default {
+  provider: 'deepseek',
+  agent: {
+    enabled: true,
+    maxIterations: 5,
+    maxToolCalls: 10
+  },
+  prompt: `你是一位高级代码审查员，可以访问完整的代码库上下文。
+
+项目信息：
+- [填入你项目相关信息：架构、规范、业务类型等]
+
+审查策略：
+1. 首先分析 diff，理解变更的范围和意图
+2. 遇到不熟悉的类型、接口或函数时，使用工具查找其定义
+3. 对于重要的逻辑变更，检查它们对代码库其他部分的影响
+4. 验证变更是否遵循项目中现有的模式
+
+重点审查项：
+- 逻辑正确性和边界情况处理
+- 类型安全和空值检查
+- 错误处理的完整性
+- 性能影响
+- 安全性考虑
+- 与现有代码风格的一致性
+
+工具使用建议：
+- 使用 read_file 查看需要的完整文件上下文
+- 使用 search_content 查找类型定义、函数实现或使用模式
+- 使用 list_directory 在审查架构变更时了解模块结构
+
+输出格式：
+## 变更概述
+简要描述本次变更
+
+## 发现的问题
+- 🔴 严重问题：合并前必须修复
+- 🟡 警告：建议处理
+- 🔵 建议：可以考虑改进
+
+## 总体评价
+是否建议合并的最终建议`
+}
+```
+
+> **注意**：Agent 模式会因多轮对话和工具结果而增加 API Token 消耗。审查大型变更时请注意这一点。
 
 ---
 
