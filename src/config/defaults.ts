@@ -49,5 +49,10 @@ Provide feedback prioritized by:
 Provide specific examples on how to fix the issues.`,
   output: {
     dir: '.review-logs'
+  },
+  agent: {
+    enabled: false,
+    maxIterations: 5,
+    maxToolCalls: 10
   }
 }

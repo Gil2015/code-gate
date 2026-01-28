@@ -22,8 +22,9 @@ Supports zero-config execution via npx, npm/yarn/pnpm package integration, and a
 
 ## ✨ Features
 
-- **🔒 Privacy First**: Native support for Ollama local models. 
+- **🔒 Privacy First**: Native support for Ollama local models.
 - **☁️ Multi-Model Support**: Seamlessly integrates with DeepSeek, OpenAI, Anthropic, Aliyun Qwen, Doubao, and more.
+- **🤖 Agent Mode**: AI can actively retrieve code context (file contents, search definitions, browse directories) for deeper and more accurate reviews. Supports DeepSeek and Zhipu.
 - **🌍 Multi-Language**: Built-in support for English, Chinese (Simplified & Traditional), Japanese, Korean, German, and French.
 - **⚡️ High Performance**: Intelligent concurrent processing for faster reviews across multiple files.
 - **🛠️ Highly Customizable**: Custom prompts, file filtering rules, and review strategies.
@@ -90,6 +91,12 @@ Provide feedback prioritized by:
 Provide specific examples on how to fix the issues.`,
   output: {
     dir: '.review-logs'
+  },
+  // Agent Mode (Optional) - Enables AI to actively retrieve code context
+  agent: {
+    enabled: false,      // Set to true to enable Agent mode (supports DeepSeek and Zhipu)
+    maxIterations: 5,    // Max iteration rounds
+    maxToolCalls: 10     // Max tool calls per review
   }
 }
 ```
@@ -202,6 +209,9 @@ git commit -m "feat: new feature"
 | `language` | `string` | `'en'` | UI & Prompt Language. Options: `'en'`, `'zh-CN'`, `'zh-TW'`, `'ja'`, `'ko'`, `'de'`, `'fr'` |
 | `prompt` | `string` | `...` | Universal system prompt sent to AI |
 | `output.dir` | `string` | `'.review-logs'` | Output directory for local reports and static assets |
+| `agent.enabled` | `boolean` | `false` | Enable Agent mode for deeper context-aware reviews (DeepSeek & Zhipu only) |
+| `agent.maxIterations` | `number` | `5` | Max iteration rounds for Agent to gather context |
+| `agent.maxToolCalls` | `number` | `10` | Max tool calls allowed per review session |
 
 ### providerOptions Configuration
 
@@ -275,6 +285,112 @@ Set in your `.env` file or system environment:
 ```bash
 export DEEPSEEK_API_KEY=[your-deepseek-api-key]
 ```
+
+---
+
+## 🤖 Agent Mode
+
+Agent mode enables AI to actively retrieve code context during reviews, resulting in more accurate and comprehensive feedback. Instead of only seeing the diff, the AI can:
+
+- **Read complete files** to understand the full context of changes
+- **Search for definitions** to understand types, interfaces, and function implementations
+- **Find references** to assess the impact of changes
+- **Browse directory structure** to understand project organization
+
+### Enabling Agent Mode
+
+Add the `agent` configuration to your `.codegate.js`:
+
+```javascript
+export default {
+  provider: 'deepseek',  // or 'zhipu'
+  providerOptions: {
+    deepseek: {
+      apiKeyEnv: 'DEEPSEEK_API_KEY',
+      model: 'deepseek-chat'
+    }
+  },
+  agent: {
+    enabled: true,       // Enable Agent mode
+    maxIterations: 5,    // Max rounds of context gathering
+    maxToolCalls: 10     // Max tool invocations
+  }
+}
+```
+
+### Supported Providers
+
+Currently, Agent mode is supported by:
+- **DeepSeek** (`deepseek-chat` and other models with function calling)
+- **Zhipu** (`glm-4` and other models with function calling)
+
+### Available Tools
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| `read_file` | Read file contents with pagination | View complete source files, type definitions |
+| `search_content` | Search code with regex patterns | Find function definitions, method calls |
+| `list_directory` | List directory structure | Understand project organization |
+
+### How It Works
+
+1. AI receives the diff and list of changed files
+2. AI analyzes the changes and identifies areas needing more context
+3. AI uses tools to retrieve relevant code (e.g., type definitions, related functions)
+4. AI generates a comprehensive review based on full context
+5. Process repeats until AI has enough information or limits are reached
+
+### Agent Mode Prompt Example
+
+When using Agent mode, you can optimize your prompt to leverage the AI's ability to retrieve context. Here's a recommended prompt for Agent mode:
+
+```javascript
+export default {
+  provider: 'deepseek',
+  agent: {
+    enabled: true,
+    maxIterations: 5,
+    maxToolCalls: 10
+  },
+  prompt: `You are a senior code reviewer with access to the full codebase context.
+
+Project Info:
+- [Fill in your project info: architecture, standards, business type, etc.]
+
+Review Strategy:
+1. First analyze the diff to understand the scope and intent of changes
+2. When encountering unfamiliar types, interfaces, or functions, use tools to look up their definitions
+3. For significant logic changes, check how they affect other parts of the codebase
+4. Verify that changes follow existing patterns in the project
+
+Key Review Points:
+- Logic correctness and edge case handling
+- Type safety and null checks
+- Error handling completeness
+- Performance implications
+- Security considerations
+- Consistency with existing codebase patterns
+
+When using tools:
+- Use read_file to view complete file context when needed
+- Use search_content to find type definitions, function implementations, or usage patterns
+- Use list_directory to understand module structure when reviewing architectural changes
+
+Output Format:
+## Summary
+Brief description of the changes
+
+## Issues Found
+- 🔴 Critical: Must fix before merge
+- 🟡 Warning: Should address
+- 🔵 Suggestion: Consider improving
+
+## Overall Assessment
+Final recommendation on whether to merge`
+}
+```
+
+> **Note**: Agent mode increases API token usage due to multi-turn conversations and tool results. Consider this when reviewing large changes.
 
 ---
 

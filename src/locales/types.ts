@@ -7,7 +7,10 @@ export interface Translation {
     reviewSkipped: string
     initReview: string
     preparingReview: string // with {total} placeholder
+    preparingReviewAgent: string // with {total} placeholder
     analyzing: string // with {idx}, {total}, {file} placeholders
+    analyzingAgent: string
+    agentToolCall: string // with {tool} placeholder
     taskSubmitted: string
     previewUrl: string
     confirmCommit: string
