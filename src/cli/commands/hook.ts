@@ -137,6 +137,12 @@ function printBox(title: string, body: string) {
 export async function runHook(force = false) {
   // Load config first to set language
   const cfg = await loadConfig()
+  
+  if (!cfg) {
+    console.error(picocolors.red(t('cli.configNotFound')))
+    process.exit(1)
+  }
+
   if (cfg.language) {
     setLanguage(cfg.language)
   }

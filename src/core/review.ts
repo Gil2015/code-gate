@@ -17,7 +17,7 @@ import {
 import { createLLMProvider } from '../llm/index.js'
 import { renderHTMLLive, renderHTMLTabs } from '../ui/render/html.js'
 import { serveReview, saveOutput, triggerOpen } from '../ui/server.js'
-import { info, warn } from '../utils/logger.js'
+import { info as logInfo, warn } from '../utils/logger.js'
 
 export interface ReviewFlowOptions {
   onProgress?: (file: string, index: number, total: number) => void
@@ -28,6 +28,12 @@ export interface ReviewFlowOptions {
 
 export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boolean> {
   const cfg = await loadConfig()
+  
+  if (!cfg) {
+    // Should be handled by CLI, but just in case
+    return true
+  }
+
   if (cfg.language) {
     setLanguage(cfg.language)
   }
@@ -43,9 +49,16 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
   const mode = (cfg.reviewMode || 'files') as 'summary' | 'files' | 'both'
   const modelUsed = cfg.providerOptions?.[providerName]?.model || 'unknown'
 
-  const files = filterFiles(getFiles(), cfg.fileTypes, cfg.exclude)
+  const allFiles = getFiles()
+  
+  if (allFiles.length === 0) {
+    logInfo(t('cli.noFiles'))
+    return true
+  }
+
+  const files = filterFiles(allFiles, cfg.fileTypes, cfg.exclude)
   if (files.length === 0) {
-    // info('code-gate: 没有可审查的文件')
+    logInfo(t('cli.noFilesAfterFilter'))
     return true
   }
 
@@ -164,7 +177,7 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
     let fdiff = getFileDiff(f)
     
     // Check for max diff lines
-    const maxDiffLines = cfg.limits?.maxDiffLines || 10000
+    const maxDiffLines = cfg?.limits?.maxDiffLines || 10000
     const lines = fdiff.split('\n')
     if (lines.length > maxDiffLines) {
       fdiff = lines.slice(0, maxDiffLines).join('\n') + t('cli.diffTruncated', { lines: lines.length })

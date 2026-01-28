@@ -16,6 +16,9 @@ export interface Translation {
     diffTruncated: string // with {lines} placeholder
     ollamaCheckFailed: string
     pressEnterToExit: string
+    configNotFound: string
+    noFiles: string
+    noFilesAfterFilter: string
   }
   ui: {
     title: string

@@ -10,14 +10,20 @@ export * from './defaults.js'
 
 function findConfigFile(cwd: string): string | undefined {
   const candidates = [
-    path.join(cwd, '.codegate.js'),
-    path.join(cwd, '.codegate.cjs'),
-    path.join(cwd, '.codegate.mjs'),
+    // Recommended formats
     path.join(cwd, '.codegate.ts'),
-    path.join(cwd, 'code-gate.config.js'),
-    path.join(cwd, 'code-gate.config.cjs'),
-    path.join(cwd, 'code-gate.config.mjs'),
+    path.join(cwd, '.codegate.js'),
+    path.join(cwd, '.codegate.mjs'),
+    path.join(cwd, '.codegate.cjs'),
+    path.join(cwd, '.codegate.json'),
+    path.join(cwd, '.codegate.yaml'),
+    path.join(cwd, '.codegate.yml'),
+    
+    // Legacy formats (kept for backward compatibility)
     path.join(cwd, 'code-gate.config.ts'),
+    path.join(cwd, 'code-gate.config.js'),
+    path.join(cwd, 'code-gate.config.mjs'),
+    path.join(cwd, 'code-gate.config.cjs'),
     path.join(cwd, 'code-gate.config.json'),
     path.join(cwd, 'code-gate.config.yaml'),
     path.join(cwd, 'code-gate.config.yml'),
@@ -65,9 +71,9 @@ function mergeDeep(target: any, ...sources: any[]): any {
   return mergeDeep(target, ...sources);
 }
 
-export async function loadConfig(cwd = process.cwd()): Promise<Config> {
+export async function loadConfig(cwd = process.cwd()): Promise<Config | null> {
   const p = findConfigFile(cwd)
-  if (!p) return { ...defaultConfig }
+  if (!p) return null
   
   try {
     const user = (await readFile(p)) || {}

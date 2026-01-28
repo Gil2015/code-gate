@@ -17,6 +17,7 @@ async function run() {
     prompt: '通用提示词'
   })
   const cfg = await loadConfig(dir)
+  if (!cfg) throw new Error('config load failed')
   if (cfg.ui?.port !== 6000) throw new Error('ui.port merge failed')
   if (cfg.prompt !== '通用提示词') throw new Error('prompt merge failed')
   process.stdout.write('config.test passed\n')

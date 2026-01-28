@@ -16,8 +16,11 @@ export const ja: Translation = {
     commitCancelled: 'コミットをキャンセルしました',
     commitConfirmed: 'コミットを確認しました。続行します...',
     diffTruncated: '\n...(長さ制限のためDiffが切り詰められました。総行数: {lines})',
-    ollamaCheckFailed: '警告: Ollama サービスが検出されないか、接続できません。AI レビューが失敗する可能性があります。',
+    ollamaCheckFailed: 'Ollamaサービスの確認に失敗しました。Ollamaが実行されていることを確認してください (ollama serve)。',
     pressEnterToExit: 'Enterキーを押して終了...',
+    configNotFound: 'CodeGate設定ファイルが見つかりません。確認してください。',
+    noFiles: 'コードの変更は検出されませんでした。',
+    noFilesAfterFilter: '設定に基づいてレビューするファイルがありません。'
   },
   ui: {
     title: 'Code Review',

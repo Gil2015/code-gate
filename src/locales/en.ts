@@ -3,7 +3,7 @@ import { Translation } from './types.js'
 export const en: Translation = {
   cli: {
     welcome: ' Code Gate AI Review ',
-    nonInteractive: 'code-gate: non-interactive environment, skipping review',
+    nonInteractive: 'code-gate: Non-interactive environment, skipping review',
     confirmReview: 'Do you want to review this commit?',
     opCancelled: 'Operation cancelled',
     reviewSkipped: 'AI Review skipped',
@@ -16,8 +16,11 @@ export const en: Translation = {
     commitCancelled: 'Commit cancelled',
     commitConfirmed: 'Commit confirmed, proceeding...',
     diffTruncated: '\n...(Diff truncated due to length, total lines: {lines})',
-    ollamaCheckFailed: 'Warning: Ollama service seems unavailable. AI Review might fail.',
+    ollamaCheckFailed: 'Ollama service check failed. Please ensure Ollama is running (ollama serve).',
     pressEnterToExit: 'Press Enter to exit...',
+    configNotFound: 'No codegate configuration file found, please check.',
+    noFiles: 'No code changes detected.',
+    noFilesAfterFilter: 'No matching files to review based on configuration.'
   },
   ui: {
     title: 'Code Review',

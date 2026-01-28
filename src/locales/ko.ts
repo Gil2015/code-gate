@@ -16,8 +16,11 @@ export const ko: Translation = {
     commitCancelled: '커밋 취소됨',
     commitConfirmed: '커밋 확인됨, 계속 진행...',
     diffTruncated: '\n...(길이 제한으로 인해 Diff가 잘렸습니다. 총 라인 수: {lines})',
-    ollamaCheckFailed: '경고: Ollama 서비스가 감지되지 않거나 연결할 수 없습니다. AI 리뷰가 실패할 수 있습니다.',
+    ollamaCheckFailed: 'Ollama 서비스 확인 실패. Ollama가 실행 중인지 확인하세요 (ollama serve).',
     pressEnterToExit: '종료하려면 Enter 키를 누르세요...',
+    configNotFound: 'CodeGate 구성 파일을 찾을 수 없습니다. 확인해 주세요.',
+    noFiles: '코드 변경 사항이 감지되지 않았습니다.',
+    noFilesAfterFilter: '구성에 따라 검토할 일치하는 파일이 없습니다.'
   },
   ui: {
     title: 'Code Review',

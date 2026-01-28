@@ -3,7 +3,7 @@ import { Translation } from './types.js'
 export const zhTW: Translation = {
   cli: {
     welcome: ' Code Gate AI Review ',
-    nonInteractive: 'code-gate: 非交互式環境，跳過審查',
+    nonInteractive: 'code-gate: 非互動式環境，跳過審查',
     confirmReview: '需要進行本次提交的代碼 Review 嗎？',
     opCancelled: '操作已取消',
     reviewSkipped: '已跳過 AI 審查',
@@ -16,8 +16,11 @@ export const zhTW: Translation = {
     commitCancelled: '已取消提交',
     commitConfirmed: '提交確認，繼續執行...',
     diffTruncated: '\n...(Diff 過長已截斷，總行數: {lines})',
-    ollamaCheckFailed: '警告: 檢測到 Ollama 服務未啟動或無法連接，AI Review 可能會失敗。',
-    pressEnterToExit: '按回車鍵退出...',
+    ollamaCheckFailed: 'Ollama 服務檢測失敗。請確保 Ollama 正在運行 (ollama serve)。',
+    pressEnterToExit: '按 Enter 鍵退出...',
+    configNotFound: '未檢測到codegate設定檔，請檢查',
+    noFiles: '未檢測到程式碼變更',
+    noFilesAfterFilter: '沒有符合設定要求的檔案需要審查'
   },
   ui: {
     title: 'Code Review',

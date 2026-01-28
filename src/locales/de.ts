@@ -3,7 +3,7 @@ import { Translation } from './types.js'
 export const de: Translation = {
   cli: {
     welcome: ' Code Gate AI Review ',
-    nonInteractive: 'code-gate: Nicht-interaktive Umgebung, Review übersprungen',
+    nonInteractive: 'code-gate: Nicht-interaktive Umgebung, Überprüfung übersprungen',
     confirmReview: 'Möchten Sie diesen Commit überprüfen lassen?',
     opCancelled: 'Vorgang abgebrochen',
     reviewSkipped: 'AI-Review übersprungen',
@@ -16,8 +16,11 @@ export const de: Translation = {
     commitCancelled: 'Commit abgebrochen',
     commitConfirmed: 'Commit bestätigt, fahre fort...',
     diffTruncated: '\n...(Diff aufgrund der Länge gekürzt, Gesamtzeilen: {lines})',
-    ollamaCheckFailed: 'Warnung: Ollama-Dienst nicht verfügbar oder nicht erreichbar. AI-Review könnte fehlschlagen.',
+    ollamaCheckFailed: 'Ollama-Dienstprüfung fehlgeschlagen. Bitte stellen Sie sicher, dass Ollama läuft (ollama serve).',
     pressEnterToExit: 'Drücken Sie die Eingabetaste zum Beenden...',
+    configNotFound: 'Keine CodeGate-Konfigurationsdatei gefunden, bitte überprüfen.',
+    noFiles: 'Keine Codeänderungen erkannt.',
+    noFilesAfterFilter: 'Keine passenden Dateien zur Überprüfung basierend auf der Konfiguration.'
   },
   ui: {
     title: 'Code Review',
