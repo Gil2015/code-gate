@@ -54,10 +54,13 @@ export class DeepSeekProvider extends BaseAgentProvider {
   protected async callLLMWithTools(
     messages: AgentMessage[],
     tools: ToolDefinition[]
-  ): Promise<{ content: string | null; toolCalls: ToolCall[] }> {
+  ): Promise<{ content: string | null; toolCalls: ToolCall[]; reasoning_content?: string }> {
     const client = this.getClient()
     const opts = this.config.providerOptions?.deepseek
     const model = opts?.model || 'deepseek-chat'
+
+    // 检测是否使用 Reasoner 模型
+    const isReasonerModel = model.includes('reasoner')
 
     // 转换消息格式
     const openaiMessages = messages.map(m => {
@@ -70,7 +73,7 @@ export class DeepSeekProvider extends BaseAgentProvider {
       }
 
       if (m.role === 'assistant' && m.tool_calls) {
-        return {
+        const assistantMsg: any = {
           role: 'assistant' as const,
           content: m.content,
           tool_calls: m.tool_calls.map(tc => ({
@@ -82,6 +85,11 @@ export class DeepSeekProvider extends BaseAgentProvider {
             }
           }))
         }
+        // DeepSeek Reasoner 模型需要保留 reasoning_content
+        if (isReasonerModel && (m as any).reasoning_content) {
+          assistantMsg.reasoning_content = (m as any).reasoning_content
+        }
+        return assistantMsg
       }
 
       return {
@@ -102,10 +110,10 @@ export class DeepSeekProvider extends BaseAgentProvider {
       ...opts?.request
     })
 
-    const message = response.choices?.[0]?.message
+    const message = response.choices?.[0]?.message as any
 
     // 解析工具调用
-    const toolCalls: ToolCall[] = (message?.tool_calls || []).map(tc => ({
+    const toolCalls: ToolCall[] = (message?.tool_calls || []).map((tc: any) => ({
       id: tc.id,
       name: tc.function.name,
       arguments: JSON.parse(tc.function.arguments || '{}')
@@ -113,7 +121,9 @@ export class DeepSeekProvider extends BaseAgentProvider {
 
     return {
       content: message?.content || null,
-      toolCalls
+      toolCalls,
+      // DeepSeek Reasoner 模型会返回 reasoning_content
+      reasoning_content: message?.reasoning_content
     }
   }
 }

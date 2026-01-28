@@ -24,6 +24,7 @@ export interface AgentUserMessage extends AgentMessageBase {
 export interface AgentAssistantMessage extends AgentMessageBase {
   role: 'assistant'
   tool_calls?: ToolCall[]
+  reasoning_content?: string  // DeepSeek Reasoner 模型需要
 }
 
 export interface AgentToolMessage extends AgentMessageBase {
@@ -81,6 +82,7 @@ export type LLMCallFunction = (
 ) => Promise<{
   content: string | null
   toolCalls: ToolCall[]
+  reasoning_content?: string  // DeepSeek Reasoner 模型返回
 }>
 
 // ============ Agent 编排器接口 ============

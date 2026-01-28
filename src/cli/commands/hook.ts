@@ -173,13 +173,26 @@ export async function runHook(force = false) {
   s.start(t('cli.initReview'))
 
   let previewUrl = ''
+  let isAgentMode = false
 
   const ok = await runReviewFlow({
-    onStart: (total) => {
-      s.message(t('cli.preparingReview', { total }))
+    onStart: (total, agentMode) => {
+      isAgentMode = agentMode
+      if (agentMode) {
+        s.message(t('cli.preparingReviewAgent', { total }))
+      } else {
+        s.message(t('cli.preparingReview', { total }))
+      }
     },
     onProgress: (file, idx, total) => {
-      s.message(t('cli.analyzing', { idx, total, file }))
+      if (isAgentMode) {
+        s.message(t('cli.analyzingAgent'))
+      } else {
+        s.message(t('cli.analyzing', { idx, total, file }))
+      }
+    },
+    onAgentToolCall: (tool) => {
+      s.message(t('cli.agentToolCall', { tool }))
     },
     onServerReady: (url) => {
       previewUrl = url

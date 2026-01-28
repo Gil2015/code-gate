@@ -73,5 +73,6 @@ export abstract class BaseAgentProvider extends BaseLLMProvider implements Agent
   ): Promise<{
     content: string | null
     toolCalls: ToolCall[]
+    reasoning_content?: string  // DeepSeek Reasoner 模型返回
   }>
 }

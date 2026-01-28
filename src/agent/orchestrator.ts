@@ -82,11 +82,16 @@ export function createOrchestrator(
       state.totalToolCalls += callsThisIteration
 
       // 添加 assistant 消息（包含工具调用）
-      state.messages.push({
+      const assistantMessage: AgentMessage = {
         role: 'assistant',
         content: response.content,
         tool_calls: response.toolCalls
-      })
+      }
+      // DeepSeek Reasoner 模型需要保留 reasoning_content
+      if (response.reasoning_content) {
+        (assistantMessage as any).reasoning_content = response.reasoning_content
+      }
+      state.messages.push(assistantMessage)
 
       // 添加工具结果消息
       for (const result of results) {

@@ -53,7 +53,7 @@ export class ZhipuProvider extends BaseAgentProvider {
   protected async callLLMWithTools(
     messages: AgentMessage[],
     tools: ToolDefinition[]
-  ): Promise<{ content: string | null; toolCalls: ToolCall[] }> {
+  ): Promise<{ content: string | null; toolCalls: ToolCall[]; reasoning_content?: string }> {
     const client = this.getClient()
     const opts = this.config.providerOptions?.zhipu
     const model = opts?.model || 'glm-4'

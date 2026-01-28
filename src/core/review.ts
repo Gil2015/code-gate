@@ -23,7 +23,8 @@ import { info as logInfo, warn } from '../utils/logger.js'
 export interface ReviewFlowOptions {
   onProgress?: (file: string, index: number, total: number) => void
   onServerReady?: (url: string) => void
-  onStart?: (total: number) => void
+  onStart?: (total: number, agentMode: boolean) => void
+  onAgentToolCall?: (toolName: string) => void
   commitHash?: string
 }
 
@@ -58,10 +59,12 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
     maxIterations: cfg.agent?.maxIterations ?? 5,
     maxToolCalls: cfg.agent?.maxToolCalls ?? 10,
     onToolCall: (call: { name: string }) => {
-      logInfo(`Agent 调用工具: ${call.name}`)
+      if (opts.onAgentToolCall) {
+        opts.onAgentToolCall(call.name)
+      }
     },
-    onIteration: (iteration: number, toolCalls: number) => {
-      logInfo(`Agent 迭代 ${iteration}, 工具调用: ${toolCalls}`)
+    onIteration: (_iteration: number, _toolCalls: number) => {
+      // 迭代信息通过 onAgentToolCall 传递
     }
   } : null
 
@@ -78,15 +81,16 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
     return true
   }
 
-  // Only fetch global diff if we need a summary or if we need to check if diff exists (though files.length > 0 usually implies diff exists)
-  // But strictly speaking, we might want to skip this check for 'files' mode to avoid large buffer issues
+  // Agent 模式或 summary 模式需要获取全局 diff
+  // Agent 模式会将所有文件一起审查，需要完整的 diff
   let diff = ''
-  if (mode === 'summary' || mode === 'both') {
+  if (mode === 'summary' || mode === 'both' || agentEnabled) {
     diff = getDiff()
     if (!diff) {
-      warn('code-gate: 无法获取完整 Diff (可能文件过大)，将跳过 Summary 生成')
-      // Fallback: Disable summary mode or proceed with empty diff?
-      // For now, let's just proceed. The provider might handle empty diff or we handle it in runSummary
+      warn('code-gate: 无法获取完整 Diff (可能文件过大)')
+      if (agentEnabled) {
+        warn('code-gate: Agent 模式需要完整 Diff，将回退到普通模式')
+      }
     }
   }
 
@@ -112,7 +116,7 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
     } catch {}
   }
 
-  if (opts.onStart) opts.onStart(files.length)
+  if (opts.onStart) opts.onStart(files.length, agentEnabled)
 
   async function runSummary(): Promise<string> {
     try {
@@ -191,75 +195,106 @@ export async function runReviewFlow(opts: ReviewFlowOptions = {}): Promise<boole
     return false
   }
 
-  const html = renderHTMLLive(id, { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status, datetime: formattedTime, subtitle, showLogo: cfg.ui?.showLogo }, [])
-  const previewUrl = await serveReview(cfg, html, id, () => {
-    const completed = items.filter((it) => it.done)
-    const expected = list.length + (mode === 'both' ? 1 : 0)
-    const allDone = completed.length >= expected
-    return { files: completed, done: allDone }
-  }, false)
-  
-  if (opts.onServerReady && previewUrl) opts.onServerReady(previewUrl)
+  // ============ Agent 模式：所有文件合并审查 ============
+  if (agentEnabled && agentOptions && diff) {
+    logInfo('Agent 模式：合并审查所有变更文件')
 
-  let completedCount = 0
+    const html = renderHTMLLive(id, { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status, datetime: formattedTime, subtitle, showLogo: cfg.ui?.showLogo }, [])
+    const previewUrl = await serveReview(cfg, html, id, () => {
+      const completed = items.filter((it) => it.done)
+      return { files: completed, done: completed.length > 0 }
+    }, false)
 
-  async function runTask(f: string) {
-    let fdiff = getFileDiff(f)
+    if (opts.onServerReady && previewUrl) opts.onServerReady(previewUrl)
 
-    // Check for max diff lines
-    const maxDiffLines = cfg?.limits?.maxDiffLines || 10000
-    const lines = fdiff.split('\n')
-    if (lines.length > maxDiffLines) {
-      fdiff = lines.slice(0, maxDiffLines).join('\n') + t('cli.diffTruncated', { lines: lines.length })
-    }
-
-    let frev = ''
+    // 执行 Agent 审查（所有文件一起）
+    let agentReview = ''
     try {
       aiInvoked = true
+      logInfo(`Agent 开始审查 ${list.length} 个文件...`)
 
-      // 根据模式选择审查方式
-      if (agentEnabled && agentOptions) {
-        // Agent 模式：使用工具获取上下文
-        frev = await (provider as AgentLLMProvider).reviewWithAgent(
-          { prompt, diff: fdiff, files: [f] },
-          agentOptions
-        )
-      } else {
-        // 普通模式
-        frev = await provider.review({ prompt, diff: fdiff })
-      }
+      agentReview = await (provider as AgentLLMProvider).reviewWithAgent(
+        { prompt, diff, files: list },
+        agentOptions
+      )
 
-      aiSucceeded = aiSucceeded || !!frev
+      aiSucceeded = !!agentReview
     } catch (e: unknown) {
       const errMsg = e instanceof Error ? e.message : String(e)
-      warn(`code-gate: 文件 ${f} 审查失败：${errMsg}`)
+      warn(`code-gate: Agent 审查失败：${errMsg}`)
+      agentReview = `Agent 审查失败。\n错误信息：${errMsg}`
     }
-    items.push({ file: f, review: frev, diff: fdiff || 'diff --git a/' + f + ' b/' + f, done: true })
-    if (mode === 'files' && items.length === 1 && previewUrl) {
+
+    // 将审查结果作为 Summary 显示，diff 为完整 diff
+    items.push({ file: 'Agent Review', review: agentReview, diff, done: true })
+
+    if (previewUrl) {
       triggerOpen(previewUrl)
     }
-    completedCount++
-    if (opts.onProgress) opts.onProgress(f, completedCount, list.length)
-  }
 
-  const queue = [...list]
-  const workers: Promise<void>[] = []
-  
-  for (let i = 0; i < Math.max(1, concurrency); i++) {
-    const worker = (async () => {
-      while (queue.length) {
-        const f = queue.shift()
-        if (!f) break
-        await runTask(f)
+    if (opts.onProgress) opts.onProgress('Agent Review', 1, 1)
+
+    // 如果是 both 模式，不需要再次生成 summary（Agent 已经是综合审查）
+  } else {
+    // ============ 普通模式：逐个文件审查 ============
+    const html = renderHTMLLive(id, { aiInvoked, aiSucceeded, provider: providerName, model: modelUsed, status, datetime: formattedTime, subtitle, showLogo: cfg.ui?.showLogo }, [])
+    const previewUrl = await serveReview(cfg, html, id, () => {
+      const completed = items.filter((it) => it.done)
+      const expected = list.length + (mode === 'both' ? 1 : 0)
+      const allDone = completed.length >= expected
+      return { files: completed, done: allDone }
+    }, false)
+
+    if (opts.onServerReady && previewUrl) opts.onServerReady(previewUrl)
+
+    let completedCount = 0
+
+    async function runTask(f: string) {
+      let fdiff = getFileDiff(f)
+
+      // Check for max diff lines
+      const maxDiffLines = cfg?.limits?.maxDiffLines || 10000
+      const lines = fdiff.split('\n')
+      if (lines.length > maxDiffLines) {
+        fdiff = lines.slice(0, maxDiffLines).join('\n') + t('cli.diffTruncated', { lines: lines.length })
       }
-    })()
-    workers.push(worker)
-  }
-  await Promise.all(workers)
 
-  if (mode === 'both') {
-    const s = await runSummary()
-    items.push({ file: 'Summary', review: s, diff, done: true })
+      let frev = ''
+      try {
+        aiInvoked = true
+        frev = await provider.review({ prompt, diff: fdiff })
+        aiSucceeded = aiSucceeded || !!frev
+      } catch (e: unknown) {
+        const errMsg = e instanceof Error ? e.message : String(e)
+        warn(`code-gate: 文件 ${f} 审查失败：${errMsg}`)
+      }
+      items.push({ file: f, review: frev, diff: fdiff || 'diff --git a/' + f + ' b/' + f, done: true })
+      if (mode === 'files' && items.length === 1 && previewUrl) {
+        triggerOpen(previewUrl)
+      }
+      completedCount++
+      if (opts.onProgress) opts.onProgress(f, completedCount, list.length)
+    }
+
+    const queue = [...list]
+    const workers: Promise<void>[] = []
+
+    for (let i = 0; i < Math.max(1, concurrency); i++) {
+      const worker = (async () => {
+        while (queue.length) {
+          const f = queue.shift()
+          if (!f) break
+          await runTask(f)
+        }
+      })()
+      workers.push(worker)
+    }
+    await Promise.all(workers)
+
+    if (mode === 'both') {
+      const s = await runSummary()
+      items.push({ file: 'Summary', review: s, diff, done: true })
+    }
   }
 
   try {
